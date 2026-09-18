@@ -45,24 +45,24 @@
 
 ### 0.3 Core Dependencies
 
-- [ ] Install Supabase: `@supabase/supabase-js`, `@supabase/ssr`
-- [ ] Install Tailwind CSS v4 (already installed by `create-next-app` — verify version)
-- [ ] Install React Query: `@tanstack/react-query`, `@tanstack/react-query-devtools`
-- [ ] Install Zustand: `zustand`
-- [ ] Install Zod: `zod`
-- [ ] Install form utilities: `react-hook-form`, `@hookform/resolvers`
-- [ ] Install icons: `lucide-react`
-- [ ] Install class utilities: `clsx`, `tailwind-merge`
-- [ ] Install fonts: `geist`
-- [ ] Commit: `chore: install core dependencies`
+- [x] Install Supabase: `@supabase/supabase-js`, `@supabase/ssr`
+- [x] Install Tailwind CSS v4 (already installed by `create-next-app` — verify version)
+- [x] Install React Query: `@tanstack/react-query`, `@tanstack/react-query-devtools`
+- [x] Install Zustand: `zustand`
+- [x] Install Zod: `zod`
+- [x] Install form utilities: `react-hook-form`, `@hookform/resolvers`
+- [x] Install icons: `lucide-react`
+- [x] Install class utilities: `clsx`, `tailwind-merge`
+- [x] Install fonts: `geist`, use next fonts, no need for packages.
+- [x] Commit: `chore: install core dependencies`
 
 ### 0.4 shadcn/ui Initialization
 
-- [ ] Run `npx shadcn@latest init`
-- [ ] Choose: Style = **New York**, Base color = **Neutral**, CSS variables = **Yes**
-- [ ] Verify `components.json` was created at project root
-- [ ] Verify `src/lib/utils.ts` was created with the `cn()` helper (shadcn generates this automatically)
-- [ ] Commit: `chore: initialize shadcn/ui`
+- [x] Run `npx shadcn@latest init`
+- [x] Choose: Style = **New York**, Base color = **Neutral**, CSS variables = **Yes**
+- [x] Verify `components.json` was created at project root
+- [x] Verify `src/lib/utils.ts` was created with the `cn()` helper (shadcn generates this automatically)
+- [x] Commit: `chore: initialize shadcn/ui`
 
 ### 0.5 Folder Structure
 
