@@ -55,7 +55,7 @@ The platform features an interactive **Desk Builder** that allows users to assem
 - **Framework:** Next.js (App Router)
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS (Dark Mode by default)
-- **UI Components:** shadcn/ui & Lucide Icons
+- **UI Components:** shadcn/ui, Lucide Icons & Sonner (toasts)
 - **Backend & Auth:** Supabase (PostgreSQL, Auth, RLS, Storage)
 - **State Management:** React Query (Server State) & Zustand (Client State)
 - **Form & Validation:** React Hook Form + Zod
