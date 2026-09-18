@@ -66,29 +66,31 @@
 
 ### 0.5 Folder Structure
 
-- [ ] Create route groups: `src/app/(shop)`, `(auth)`, `(account)`, `(admin)`
-- [ ] Verify `src/components/ui/` exists (created by shadcn init)
-- [ ] Create `src/components/features/` for feature-specific components
-- [ ] Create `src/lib/supabase/` (browser, server, middleware clients)
-- [ ] Create `src/lib/schemas/` for Zod schemas
-- [ ] Create `src/stores/` for Zustand stores
-- [ ] Create `src/hooks/` for React Query hooks
-- [ ] Create `src/types/` for shared TypeScript types
-- [ ] Commit: `chore: set up project folder structure`
+> Note: this project does not use a `src/` dir (see `tsconfig.json` path aliases) — paths below are root-level to match.
+
+- [x] Create route groups: `app/(shop)`, `(auth)`, `(account)`, `(admin)`
+- [x] Verify `components/ui/` exists (created by shadcn init)
+- [x] Create `components/features/` for feature-specific components
+- [x] Create `lib/supabase/` (browser, server, middleware clients)
+- [x] Create `lib/schemas/` for Zod schemas
+- [x] Create `stores/` for Zustand stores
+- [x] Create `hooks/` for React Query hooks
+- [x] Create `types/` for shared TypeScript types
+- [x] Commit: `chore: set up project folder structure`
 
 ### 0.6 Environment Variables
 
-- [ ] Create `.env.local` with `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
-- [ ] Create `.env.example` with same keys (empty values)
-- [ ] Confirm `.env.local` is in `.gitignore` (never commit real credentials)
-- [ ] Document env vars in README
+- [x] Create `.env.local` with `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+- [x] Create `.env.example` with same keys (empty values)
+- [x] Confirm `.env.local` is in `.gitignore` (never commit real credentials)
+- [x] Document env vars in README
 
 ### 0.7 React Query Provider
 
-- [ ] Create `QueryProvider` client component wrapping `QueryClientProvider`
-- [ ] Add React Query Devtools (dev only)
-- [ ] Wrap root layout with `QueryProvider`
-- [ ] Commit: `feat: add react query provider`
+- [x] Create `QueryProvider` client component wrapping `QueryClientProvider`
+- [x] Add React Query Devtools (dev only)
+- [x] Wrap root layout with `QueryProvider`
+- [x] Commit: `feat: add react query provider`
 
 **✅ Phase 0 Complete when:** dev server runs, repo is pushed to GitHub with branch protection, shadcn/ui is initialized, folder structure is in place, all deps installed and wired.
 

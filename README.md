@@ -96,6 +96,20 @@ Open [http://localhost:3000](http://localhost:3000) 🎉
 
 ---
 
+### Environment Variables
+
+Copy `.env.example` to `.env.local` and fill in the values from your Supabase project settings (**Project Settings → API**):
+
+| Variable                        | Description                                                                             |
+| -------------------------------- | ---------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`       | Your Supabase project URL. Public — safe to expose to the browser.                       |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`  | Supabase anonymous/public API key, used by the browser client. Subject to RLS policies.  |
+| `SUPABASE_SERVICE_ROLE_KEY`      | Supabase service role key. **Server-only** — bypasses RLS. Never expose to the client.   |
+
+`.env.local` is git-ignored and should never be committed.
+
+---
+
 ## 📁 Project Structure
 
 ```
