@@ -202,51 +202,51 @@
 
 ### 2.3 Database Migrations
 
-- [ ] `supabase/migrations/001_create_tables.sql` — all 7 tables in dependency order:
-  - [ ] `CREATE TABLE profiles`
-  - [ ] `CREATE TABLE categories` + indexes
-  - [ ] `CREATE TABLE products` + indexes (including full-text search GIN index)
-  - [ ] `CREATE TABLE reviews` + `UNIQUE(product_id, user_id)`
-  - [ ] `CREATE TABLE orders` + indexes
-  - [ ] `CREATE TABLE order_items` + indexes
-  - [ ] `CREATE TABLE cart_items` + unique constraint
+- [x] `supabase/migrations/001_create_tables.sql` — all 7 tables in dependency order:
+  - [x] `CREATE TABLE profiles`
+  - [x] `CREATE TABLE categories` + indexes
+  - [x] `CREATE TABLE products` + indexes (including full-text search GIN index)
+  - [x] `CREATE TABLE reviews` + `UNIQUE(product_id, user_id)`
+  - [x] `CREATE TABLE orders` + indexes
+  - [x] `CREATE TABLE order_items` + indexes
+  - [x] `CREATE TABLE cart_items` + unique constraint
 
 ### 2.4 Triggers — `supabase/migrations/002_triggers.sql`
 
-- [ ] Create `handle_new_user()` function
-- [ ] Create `on_auth_user_created` trigger on `auth.users`
-- [ ] Create `set_updated_at()` function
-- [ ] Apply `set_updated_at` trigger to `profiles`, `products`, `orders`, **`reviews`** (reviews now editable by their author — needs `updated_at`; see db-schema.md § 1.4)
-- [ ] Test: register a user → verify a `profiles` row is auto-created
+- [x] Create `handle_new_user()` function
+- [x] Create `on_auth_user_created` trigger on `auth.users`
+- [x] Create `set_updated_at()` function
+- [x] Apply `set_updated_at` trigger to `profiles`, `products`, `orders`, **`reviews`** (reviews now editable by their author — needs `updated_at`; see db-schema.md § 1.4)
+- [x] Test: register a user → verify a `profiles` row is auto-created
 
 ### 2.5 RPC Functions — `supabase/migrations/003_functions.sql`
 
-- [ ] Create `calculate_bundle_total(product_ids uuid[])` function
-- [ ] Test with 2 IDs (no discount) and 3+ IDs (5% discount applied)
-- [ ] Create `place_order(items jsonb, shipping_address jsonb, payment_method text, customer_name text, customer_phone text)` function
-  - [ ] Fetch caller's `profiles.phone`; raise exception + abort if `NULL` (server-side guard — see db-schema.md § 2.5)
-  - [ ] Snapshot the passed-in `customer_name` / `customer_phone` onto the new `orders` row
-- [ ] Test `place_order` with a mock cart payload, including the phone-missing rejection case
+- [x] Create `calculate_bundle_total(product_ids uuid[])` function
+- [x] Test with 2 IDs (no discount) and 3+ IDs (5% discount applied)
+- [x] Create `place_order(items jsonb, shipping_address jsonb, payment_method text, customer_name text, customer_phone text)` function
+  - [x] Fetch caller's `profiles.phone`; raise exception + abort if `NULL` (server-side guard — see db-schema.md § 2.5)
+  - [x] Snapshot the passed-in `customer_name` / `customer_phone` onto the new `orders` row
+- [x] Test `place_order` with a mock cart payload, including the phone-missing rejection case
 
 ### 2.6 Views — `supabase/migrations/003_functions.sql` (same file as 2.5)
 
-- [ ] Create `product_rating_stats` view
+- [x] Create `product_rating_stats` view
 
 ### 2.7 RLS Policies — `supabase/migrations/004_rls_policies.sql`
 
-- [ ] Enable RLS on all tables
-- [ ] `profiles`: users SELECT/UPDATE own row (excluding `role` column); admins SELECT all
-- [ ] `categories`: public SELECT; admin INSERT/UPDATE/DELETE
-- [ ] `products`: public SELECT (where `is_active`); admin full access
-- [ ] `reviews`: public SELECT; authenticated INSERT own; authenticated UPDATE/DELETE **own row only**; admin DELETE **any** row (no admin UPDATE)
-- [ ] `orders`: users SELECT own; INSERT via RPC only; admin SELECT/UPDATE all
-- [ ] `order_items`: SELECT if parent order is visible; INSERT only via place_order RPC
-- [ ] `cart_items`: users full access to own rows only
+- [x] Enable RLS on all tables
+- [x] `profiles`: users SELECT/UPDATE own row (excluding `role` column); admins SELECT all
+- [x] `categories`: public SELECT; admin INSERT/UPDATE/DELETE
+- [x] `products`: public SELECT (where `is_active`); admin full access
+- [x] `reviews`: public SELECT; authenticated INSERT own; authenticated UPDATE/DELETE **own row only**; admin DELETE **any** row (no admin UPDATE)
+- [x] `orders`: users SELECT own; INSERT via RPC only; admin SELECT/UPDATE all
+- [x] `order_items`: SELECT if parent order is visible; INSERT only via place_order RPC
+- [x] `cart_items`: users full access to own rows only
 
 ### 2.8 Storage — bucket setup (post-RLS)
 
-- [ ] Create Supabase Storage bucket `product-images` (public read)
-- [ ] Set upload policy: authenticated admins only
+- [x] Create Supabase Storage bucket `product-images` (public read)
+- [x] Set upload policy: authenticated admins only
 
 ### 2.9 Seed Data
 
