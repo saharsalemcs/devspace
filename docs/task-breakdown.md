@@ -256,9 +256,9 @@
 
 ### 2.10 TypeScript Types
 
-- [ ] Run `supabase gen types typescript` → save to `types/database.ts`
-- [ ] Create typed Supabase client wrapper
-- [ ] Verify autocomplete works on `.from('products')`
+- [x] Run `supabase gen types typescript` → save to `types/database.ts`
+- [x] Create typed Supabase client wrapper
+- [x] Verify autocomplete works on `.from('products')`
 
 **✅ Phase 2 Complete when:** all tables exist, RLS is on, seed data is queryable, RPCs return correct values.
 
