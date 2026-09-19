@@ -103,6 +103,15 @@
 - [x] Wrap root layout with `QueryProvider`
 - [x] Commit: `feat: add react query provider`
 
+### 0.8 Offline Detection Setup
+
+> Next.js 16's `useOffline` (`experimental`) only covers Next-native navigation, prefetch, and Server Action requests — it does **not** touch React Query/Supabase client-side fetches, which keep their own retry behavior (see § 0.7 / Phase 4). Test with `next build && next start` — dev mode doesn't reflect real offline behavior.
+
+- [ ] Enable `experimental.useOffline` in `next.config.ts`
+- [ ] Create `OfflineBanner` client component (`useOffline()` from `next/offline`) — persistent site-wide banner shown whenever connectivity drops
+- [ ] Mount `OfflineBanner` in root `layout.tsx` so it's visible on every route
+- [ ] Commit: `feat: enable offline detection and connectivity banner`
+
 **✅ Phase 0 Complete when:** dev server runs, repo is pushed to GitHub with branch protection, shadcn/ui is initialized, folder structure is in place, all deps installed and wired.
 
 ---
@@ -315,15 +324,19 @@
 - [ ] Create `useProduct(slug)` hook
 - [ ] Create `useCategories()` hook
 - [ ] Create Zod schemas for query params
+- [ ] Define a shared `staleTime` constant for product/category queries — reused by the hooks above and by every prefetch call in 4.2–4.4, so a prefetch never refires against data that's still fresh
 
 ### 4.2 Product Listing Page
 
 - [ ] Build `/products` layout (sidebar filters + main grid)
+- [ ] Server-prefetch the first page of products (default filters/sort) with `queryClient.query()` in the Server Component and hydrate via `HydrationBoundary`, so the grid has data on first paint instead of a client-side loading spinner
 - [ ] Implement search bar (URL-synced via `useSearchParams`)
 - [ ] Implement category filter (multi-select checkboxes)
 - [ ] Implement price range filter (min/max inputs)
 - [ ] Implement sort dropdown (Price asc/desc, Newest, Top-rated)
 - [ ] Implement pagination controls
+- [ ] Prefetch the next page's products (`queryClient.query()` with the next page's filters/sort, guarded by the shared `staleTime`) as soon as the current page renders, so "Next" feels instant
+- [ ] Wire hover/focus prefetch on `ProductCard`'s title link (`onMouseEnter`/`onFocus` → `queryClient.query(['product', slug], ...)`) so clicking into a product usually hits a warm cache — this is shared `ProductCard` behavior, so it also covers the Home featured grid (4.3) for free
 - [ ] Empty state: "No products match your filters"
 - [ ] Loading state: skeleton grid
 
@@ -331,11 +344,13 @@
 
 - [ ] Build `/` hero section with Desk Builder CTA
 - [ ] Featured products grid (top 8 by rating)
+- [ ] Server-prefetch the featured-products query with `queryClient.query()` in the Server Component and hydrate via `HydrationBoundary`
 - [ ] Category highlights section (6 category cards)
 
 ### 4.4 Product Details Page
 
 - [ ] Build `/products/[slug]` layout (gallery left, info right)
+- [ ] Server-prefetch `useProduct(slug)`'s query with `queryClient.query()` in the Server Component and hydrate via `HydrationBoundary`, so the gallery/info render with data on first paint
 - [ ] Build image gallery component (main image + thumbnail strip)
 - [ ] Display name, price, category badge, description
 - [ ] Display specs table (from `specs` jsonb)
@@ -468,6 +483,7 @@
 ### 8.2 Place Order Action
 
 - [ ] Server action calls `place_order` RPC with cart items + shipping info + `customer_name` + `customer_phone` (from the form, prefilled-then-possibly-edited)
+- [ ] Pair the submit with `useTransition` + `useOffline()` (see § 0.8) so the "Place Order" button reads "Placing order (offline, will retry)…" if connectivity drops mid-submit — with `experimental.useOffline` on, the Server Action call itself stays pending and retries automatically once back online, instead of throwing and risking a lost/duplicate order
 - [ ] Surface the RPC's "missing phone" rejection as a clear form error (guides the user to add a phone number to their profile — or just retype it in the form — before retrying)
 - [ ] On success: clear cart (Zustand + `cart_items` in DB)
 - [ ] Redirect to `/checkout/success?order_id=...`
@@ -561,6 +577,7 @@
 ### 10.2 Loading States
 
 - [ ] `loading.tsx` for slower pages (Product Listing, Orders)
+- [ ] Make those `loading.tsx` fallbacks offline-aware with `useOffline()` (see § 0.8) — swap the generic spinner for "Waiting for connection to load this page…" when connectivity is down, instead of a spinner that looks stuck
 - [ ] Skeleton components for all major lists
 
 ### 10.3 Notifications
