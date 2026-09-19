@@ -100,70 +100,74 @@
 
 ### 1.1 Tailwind v4 + shadcn/ui Theming
 
-- [ ] Open `src/app/globals.css`
-- [ ] Replace shadcn's auto-generated `:root` variables with the Ember Orange version from design-system.md § 4.3
-- [ ] Add the `@theme inline` block mapping shadcn variables to Tailwind utilities
-- [ ] Add the custom `@theme` block (neutral scale, ember scale, typography, shadows, animations)
-- [ ] Add the three `@keyframes` blocks (fade-in, scale-in, slide-up)
-- [ ] Add the `@layer base` block (html, body, `::selection`, border/ring defaults)
-- [ ] Delete any leftover `tailwind.config.ts`/`.js` if `create-next-app` generated one (v4 doesn't use it)
-- [ ] Verify shadcn utility classes render correctly: `bg-primary`, `text-muted-foreground`, `border`
-- [ ] Verify custom utility classes render correctly: `bg-ember-500`, `text-h1`, `shadow-ember-glow`
-- [ ] Commit: `style: configure tailwind v4 theme + shadcn variables`
+- [x] Open `app/globals.css`
+- [x] Replace shadcn's auto-generated `:root` variables with the Ember Orange version from design-system.md § 4.3
+- [x] Add the `@theme inline` block mapping shadcn variables to Tailwind utilities
+- [x] Add the custom `@theme` block (neutral scale, ember scale, typography, shadows, animations)
+- [x] Add the three `@keyframes` blocks (fade-in, scale-in, slide-up)
+- [x] Add the `@layer base` block (html, body, `::selection`, border/ring defaults)
+- [x] Delete any leftover `tailwind.config.ts`/`.js` if `create-next-app` generated one (v4 doesn't use it) — none existed
+- [x] Verify shadcn utility classes render correctly: `bg-primary`, `text-muted-foreground`, `border`
+- [x] Verify custom utility classes render correctly: `bg-ember-500`, `text-h1`, `shadow-ember-glow`
+- [x] Commit: `style: configure tailwind v4 theme + shadcn variables`
 
 ### 1.2 Fonts Setup
 
-- [ ] Import `GeistSans` and `GeistMono` from the `geist` package in root `layout.tsx`
-- [ ] Apply `GeistSans.variable` and `GeistMono.variable` to `<html>` className
-- [ ] Verify the `--font-geist-sans` / `--font-geist-mono` vars are picked up by `@theme`
-- [ ] Verify fonts load correctly (DevTools → Network)
-- [ ] Commit: `feat: configure geist fonts`
+> Note: per 0.2/0.3, this project uses `next/font/google` (Geist, Geist_Mono) instead of the `geist` npm package — already wired up in `app/layout.tsx` during bootstrap.
+
+- [x] Import `Geist` and `Geist_Mono` from `next/font/google` in root `layout.tsx`
+- [x] Apply `geistSans.variable` and `geistMono.variable` to `<html>` className
+- [x] Verify the `--font-geist-sans` / `--font-geist-mono` vars are picked up by `@theme`
+- [x] Verify fonts load correctly (DevTools → Network)
+- [x] Commit: `feat: configure geist fonts`
 
 ### 1.3 shadcn/ui Components — Install Base Set
 
-- [ ] Run `npx shadcn@latest add button card dialog tooltip badge input textarea select label separator skeleton sonner`
-- [ ] Verify each file appears under `src/components/ui/`
-- [ ] Sanity-check one component (`Button`) renders with the Ember Orange primary color out of the box
-- [ ] Commit: `feat: add base shadcn/ui components`
+> Note: this shadcn setup uses `base-ui` primitives (not Radix) and style `base-nova` (set in 0.4) — CLI output differs from the doc's example, functionality is equivalent.
+
+- [x] Run `npx shadcn@latest add button card dialog tooltip badge input textarea select label separator skeleton sonner`
+- [x] Verify each file appears under `components/ui/`
+- [x] Sanity-check one component (`Button`) renders with the Ember Orange primary color out of the box
+- [x] Commit: `feat: add base shadcn/ui components`
 
 ### 1.4 Customize shadcn Components to Match Design Spec
 
-- [ ] `button.tsx` — verify variants map to our spec (§ 3.1): primary (default), secondary (outline), ghost (ghost), destructive (destructive); add `loading` prop with spinner
-- [ ] `badge.tsx` — extend variants to match § 3.3: success, danger, warning, info, bundle, order-status-\*
-- [ ] `dialog.tsx` — wrap in a `Modal` component exposing `size` prop (sm/md/lg) per § 3.4
-- [ ] `tooltip.tsx` — confirm default delay; adjust to 300ms per § 3.5 if needed
-- [ ] `sonner.tsx` — verify toast provider is mounted in root layout, styled via CSS variables
-- [ ] Commit: `style: customize shadcn components to design spec`
+- [x] `button.tsx` — variants already mapped 1:1 to spec (§ 3.1): primary (default), secondary (outline), ghost (ghost), destructive (destructive); added `loading` prop with spinner
+- [x] `badge.tsx` — extended variants to match § 3.3: success, danger, warning, info, bundle, sale, featured, neutral, order-status-\*
+- [x] `dialog.tsx` — added a `Modal` composition (`Modal`, `ModalContent`, `ModalHeader`, `ModalTitle`, `ModalDescription`, `ModalBody`, `ModalFooter`) exposing `size` prop (sm/md/lg) per § 3.4, alongside the original `Dialog*` exports
+- [x] `tooltip.tsx` — default delay changed 0ms → 300ms per § 3.5
+- [x] `sonner.tsx` — mounted `<Toaster />` in root layout; simplified to dark-only (dropped `next-themes`) since DevSpace is dark-mode-only for the MVP, styled via `--popover`/`--border` CSS variables
+- [x] Commit: `style: customize shadcn components to design spec`
 
 ### 1.5 Utility Helpers
 
-- [ ] Verify `cn()` helper exists in `src/lib/utils.ts` (auto-created by shadcn init)
-- [ ] Create `formatPrice()` helper for EGP formatting (`Intl.NumberFormat`)
-- [ ] Create `formatDate()` helper
-- [ ] Commit: `feat: add formatting utility helpers`
+- [x] Verify `cn()` helper exists in `lib/utils.ts` (auto-created by shadcn init)
+- [x] Create `formatPrice()` helper for EGP formatting (`Intl.NumberFormat`)
+- [x] Create `formatDate()` helper
+- [x] Commit: `feat: add formatting utility helpers`
 
 ### 1.6 Custom Components — Cards & Surfaces
 
-- [ ] Create `ProductCard` (custom, using shadcn `Card` as structural base) with default / hover / selected / out-of-stock states per § 3.2
-- [ ] Create custom `Skeleton`-based loading placeholders for product grids
+- [x] Create `ProductCard` (custom component in `components/features/`, styled equivalent to shadcn `Card`'s tokens) with default / hover / selected / out-of-stock states per § 3.2
+- [x] Create custom `Skeleton`-based loading placeholders for product grids (`ProductCardSkeleton`)
 
 ### 1.7 Custom Components — Icon Buttons
 
-- [ ] Create `IconButton` variant on top of shadcn `Button` (square, icon-only, used in Navbar/cards)
+- [x] Create `IconButton` variant on top of shadcn `Button` (square, icon-only, used in Navbar/cards) — requires `aria-label` since it carries no visible text
 
 ### 1.8 Layout Primitives
 
-- [ ] Create `Navbar` (logo, search stub, cart icon, user menu) — custom, using shadcn `Button`/`IconButton` internally
-- [ ] Create `Footer` component
-- [ ] Create `Container` component with responsive max-widths
-- [ ] Create `(shop)/layout.tsx` with Navbar + Footer
-- [ ] Commit: `feat: add layout primitives`
+- [x] Create `Navbar` (logo, search stub, cart icon, user menu) — custom, using shadcn `Button`/`IconButton` internally
+- [x] Create `Footer` component
+- [x] Create `Container` component with responsive max-widths
+- [x] Create `(shop)/layout.tsx` with Navbar + Footer — also moved the placeholder `app/page.tsx` into `(shop)/page.tsx` so the home route actually picks up the new shell
+- [x] Commit: `feat: add layout primitives`
 
 ### 1.9 Form Composition
 
-- [ ] Create `FormField` wrapper composing shadcn `Label` + `Input`/`Textarea`/`Select` + error message (via `--destructive`)
-- [ ] Verify integration with React Hook Form + Zod resolvers
-- [ ] Commit: `feat: add form field composition component`
+- [x] Create `FormField` wrapper composing shadcn `Label` + `Input`/`Textarea`/`Select` + error message (via `--destructive`)
+- [x] Verify integration with React Hook Form + Zod resolvers (smoke-tested with a throwaway form + `zodResolver`, type-checked clean, then removed)
+- [x] Commit: `feat: add form field composition component`
 
 **✅ Phase 1 Complete when:** all shadcn primitives are installed and themed correctly, all custom components (ProductCard, Navbar, Footer, FormField) render correctly, and all tokens from design-system.md generate the expected utility classes.
 
