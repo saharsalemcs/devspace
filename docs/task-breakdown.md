@@ -250,13 +250,13 @@
 
 ### 2.9 Seed Data
 
-- [ ] Seed 6 categories (Screens, Keyboards, Mice, Lighting, Desks, Accessories) — first 4 with `is_builder_slot = true`
-- [ ] Seed 3–5 sample products per category (with real image URLs from Storage)
-- [ ] Create the Admin user manually in Auth → set `role = 'admin'` in profiles
+- [x] Seed 6 categories (Screens, Keyboards, Mice, Lighting, Desks, Accessories) — first 4 with `is_builder_slot = true`
+- [x] Seed 3–5 sample products per category (with real image URLs from Storage)
+- [x] Create the Admin user manually in Auth → set `role = 'admin'` in profiles
 
 ### 2.10 TypeScript Types
 
-- [ ] Run `supabase gen types typescript` → save to `src/types/database.ts`
+- [ ] Run `supabase gen types typescript` → save to `types/database.ts`
 - [ ] Create typed Supabase client wrapper
 - [ ] Verify autocomplete works on `.from('products')`
 
