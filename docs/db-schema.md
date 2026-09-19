@@ -1,9 +1,18 @@
 # DevSpace — Database Schema
 
-**Version:** 1.1 (MVP)
+**Version:** 1.2 (MVP)
 **Document Type:** Data Model & Business Rules
 **Database:** PostgreSQL (via Supabase)
-**Last Updated:** September 18, 2026
+**Last Updated:** September 19, 2026
+
+**Changelog (v1.1 → v1.2):**
+
+- `reviews`: added `updated_at` column + applied the `set_updated_at` trigger — needed now that a customer can edit their own review (see `project-spec.md` § 4.5 / § 3, `task-breakdown.md` § 2.4)
+- `orders`: added `customer_name` + `customer_phone` (snapshotted from `profiles` at checkout — see [2.5](#25-checkout-snapshot-customer_name--customer_phone))
+- Account deactivation strategy clarified: **Ban** via Supabase Auth (`auth.users.banned_until`), not hard delete — no schema change needed, avoids the `auth.users → profiles → orders` delete conflict
+- `reviews`: confirmed `UNIQUE(product_id, user_id)` as the final rule — **no** verified-purchase requirement in MVP
+- `place_order` RPC: now fetches + validates `profiles.phone` server-side before snapshotting (closes the "client-only validation" gap)
+- Removed all executable SQL blocks from this document — Section 3 now describes trigger/function _behavior and purpose_ only, with a pointer to the future `supabase/migrations/*.sql` files that will hold the real code. This file is documentation; migrations are code.
 
 ---
 
@@ -25,6 +34,8 @@
     - [2.2 Bundle Grouping via `bundle_id`](#22-bundle-grouping-via-bundle_id)
     - [2.3 Order Status Lifecycle](#23-order-status-lifecycle)
     - [2.4 Price Snapshots in `order_items`](#24-price-snapshots-in-order_items)
+    - [2.5 Checkout Snapshot: `customer_name` + `customer_phone`](#25-checkout-snapshot-customer_name--customer_phone)
+    - [2.6 Account Deactivation: Ban, Not Delete](#26-account-deactivation-ban-not-delete)
   - [3. Triggers \& RPC Concepts](#3-triggers--rpc-concepts)
     - [3.1 Trigger: `on_auth_user_created`](#31-trigger-on_auth_user_created)
     - [3.2 Trigger: `set_updated_at`](#32-trigger-set_updated_at)
@@ -137,17 +148,18 @@ The core catalog table. Includes a **primary image** for card/thumbnail display 
 
 ### 1.4 `reviews`
 
-Product reviews. One review per user per product (enforced by a unique constraint).
+Product reviews. One review per user per product (enforced by a unique constraint). Editable by their author (see § 2.6 / § 3.2).
 
-| Column       | Type          | Constraints                                           | Default             | Notes                               |
-| ------------ | ------------- | ----------------------------------------------------- | ------------------- | ----------------------------------- |
-| `id`         | `uuid`        | PRIMARY KEY                                           | `gen_random_uuid()` | —                                   |
-| `product_id` | `uuid`        | NOT NULL, REFERENCES `products(id)` ON DELETE CASCADE | —                   | Delete product → delete its reviews |
-| `user_id`    | `uuid`        | NOT NULL, REFERENCES `profiles(id)` ON DELETE CASCADE | —                   | —                                   |
-| `rating`     | `smallint`    | NOT NULL, CHECK (`rating BETWEEN 1 AND 5`)            | —                   | 1–5 stars                           |
-| `comment`    | `text`        | —                                                     | `NULL`              | Optional                            |
-| `created_at` | `timestamptz` | NOT NULL                                              | `now()`             | —                                   |
-|              |               | UNIQUE (`product_id`, `user_id`)                      |                     | One review per user per product     |
+| Column       | Type          | Constraints                                           | Default             | Notes                                   |
+| ------------ | ------------- | ----------------------------------------------------- | ------------------- | --------------------------------------- |
+| `id`         | `uuid`        | PRIMARY KEY                                           | `gen_random_uuid()` | —                                       |
+| `product_id` | `uuid`        | NOT NULL, REFERENCES `products(id)` ON DELETE CASCADE | —                   | Delete product → delete its reviews     |
+| `user_id`    | `uuid`        | NOT NULL, REFERENCES `profiles(id)` ON DELETE CASCADE | —                   | —                                       |
+| `rating`     | `smallint`    | NOT NULL, CHECK (`rating BETWEEN 1 AND 5`)            | —                   | 1–5 stars                               |
+| `comment`    | `text`        | —                                                     | `NULL`              | Optional                                |
+| `created_at` | `timestamptz` | NOT NULL                                              | `now()`             | —                                       |
+| `updated_at` | `timestamptz` | NOT NULL                                              | `now()`             | Auto-updated via trigger on author edit |
+|              |               | UNIQUE (`product_id`, `user_id`)                      |                     | One review per user per product         |
 
 **Indexes recommended:**
 
@@ -159,20 +171,20 @@ Product reviews. One review per user per product (enforced by a unique constrain
 
 Customer orders. Totals are **snapshotted** at creation time — never recomputed by joining live product prices.
 
-| Column             | Type            | Constraints                                                                              | Default             | Notes                                                                           |
-| ------------------ | --------------- | ---------------------------------------------------------------------------------------- | ------------------- | ------------------------------------------------------------------------------- |
-| `id`               | `uuid`          | PRIMARY KEY                                                                              | `gen_random_uuid()` | —                                                                               |
-| `user_id`          | `uuid`          | NOT NULL, REFERENCES `profiles(id)` ON DELETE RESTRICT                                   | —                   | Cannot delete a user with orders                                                |
-| `customer_name`    | `text`          | NOT NULL                                                                                 | —                   | **Snapshot** of `profiles.full_name` at checkout time                           |
-| `customer_phone`   | `text`          | NOT NULL                                                                                 | —                   | **Snapshot** of `profiles.phone` at checkout time                               |
-| `status`           | `text`          | NOT NULL, CHECK (`status IN ('pending','processing','shipped','delivered','cancelled')`) | `'pending'`         | Lifecycle managed by Admin                                                      |
-| `subtotal`         | `numeric(10,2)` | NOT NULL, CHECK (`subtotal >= 0`)                                                        | —                   | Sum of `order_items.unit_price * quantity` before discounts                     |
-| `discount_total`   | `numeric(10,2)` | NOT NULL, CHECK (`discount_total >= 0`)                                                  | `0`                 | Total bundle discounts applied                                                  |
-| `total_price`      | `numeric(10,2)` | NOT NULL, CHECK (`total_price >= 0`)                                                     | —                   | Final amount = `subtotal - discount_total`                                      |
-| `shipping_address` | `jsonb`         | NOT NULL                                                                                 | —                   | Structured: `{full_name, phone, street, city, governorate, postal_code, notes}` |
-| `payment_method`   | `text`          | NOT NULL                                                                                 | `'cod'`             | `'cod'` in MVP; ready for future gateways                                       |
-| `created_at`       | `timestamptz`   | NOT NULL                                                                                 | `now()`             | —                                                                               |
-| `updated_at`       | `timestamptz`   | NOT NULL                                                                                 | `now()`             | Auto-updated on status change                                                   |
+| Column             | Type            | Constraints                                                                              | Default             | Notes                                                                                                                  |
+| ------------------ | --------------- | ---------------------------------------------------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `id`               | `uuid`          | PRIMARY KEY                                                                              | `gen_random_uuid()` | —                                                                                                                      |
+| `user_id`          | `uuid`          | NOT NULL, REFERENCES `profiles(id)` ON DELETE RESTRICT                                   | —                   | Cannot delete a user with orders                                                                                       |
+| `customer_name`    | `text`          | NOT NULL                                                                                 | —                   | **Snapshot** of `profiles.full_name` at checkout time — see [2.5](#25-checkout-snapshot-customer_name--customer_phone) |
+| `customer_phone`   | `text`          | NOT NULL                                                                                 | —                   | **Snapshot** of `profiles.phone` at checkout time — see [2.5](#25-checkout-snapshot-customer_name--customer_phone)     |
+| `status`           | `text`          | NOT NULL, CHECK (`status IN ('pending','processing','shipped','delivered','cancelled')`) | `'pending'`         | Lifecycle managed by Admin                                                                                             |
+| `subtotal`         | `numeric(10,2)` | NOT NULL, CHECK (`subtotal >= 0`)                                                        | —                   | Sum of `order_items.unit_price * quantity` before discounts                                                            |
+| `discount_total`   | `numeric(10,2)` | NOT NULL, CHECK (`discount_total >= 0`)                                                  | `0`                 | Total bundle discounts applied                                                                                         |
+| `total_price`      | `numeric(10,2)` | NOT NULL, CHECK (`total_price >= 0`)                                                     | —                   | Final amount = `subtotal - discount_total`                                                                             |
+| `shipping_address` | `jsonb`         | NOT NULL                                                                                 | —                   | Structured: `{full_name, phone, street, city, governorate, postal_code, notes}`                                        |
+| `payment_method`   | `text`          | NOT NULL                                                                                 | `'cod'`             | `'cod'` in MVP; ready for future gateways                                                                              |
+| `created_at`       | `timestamptz`   | NOT NULL                                                                                 | `now()`             | —                                                                                                                      |
+| `updated_at`       | `timestamptz`   | NOT NULL                                                                                 | `now()`             | Auto-updated on status change                                                                                          |
 
 **Indexes recommended:**
 
@@ -288,6 +300,35 @@ The trade-off: if a product image URL rotates, order history may show a broken i
 
 ---
 
+### 2.5 Checkout Snapshot: `customer_name` + `customer_phone`
+
+**Why snapshot instead of joining `profiles` on every read?**
+The Admin Dashboard's order list/detail views need the customer's name and phone constantly (KPI cards, order table, order detail). Snapshotting avoids a `profiles` join on every query and — more importantly — keeps a **historical record independent of the account**: if the customer later edits their profile (or is banned — see [2.6](#26-account-deactivation-ban-not-delete)), past orders still show exactly what was true when the order was placed.
+
+**Source of truth:** `profiles.full_name` and `profiles.phone` — **not** `orders.shipping_address`. These represent _who the account holder is_, independent of where the order is being shipped (which may differ — a gift order, an office address, etc.). The two are allowed to diverge; that's expected, not a bug.
+
+**Flow (checkout UI + `place_order` RPC):**
+
+1. **Prefill:** when the Customer opens the Checkout page, the form's name/phone fields are prefilled from their current `profiles` row (`full_name`, `phone`) — editable in the UI if they want to correct something for this specific order.
+2. **Submit:** the client sends the (possibly edited) `customer_name` / `customer_phone` values to `place_order` — but see the validation rule below.
+3. **Snapshot:** `place_order` writes these values onto the new `orders` row. From this point on, they're frozen — never re-joined from `profiles`.
+
+**Server-side validation rule (closes the "client-only validation" gap):**
+`place_order` MUST look up the caller's `profiles.phone` via `auth.uid()` and reject the call (raise an exception) if it is `NULL` — regardless of what the client sends. This guarantees every order has a usable contact number even if someone bypasses the UI and calls the RPC directly. `customer_name` follows the same guard if a business rule requires it to be non-empty.
+
+---
+
+### 2.6 Account Deactivation: Ban, Not Delete
+
+**Decision:** the MVP never hard-deletes a row from `auth.users`. When an Admin needs to block a customer, they use Supabase Auth's built-in **Ban** feature (`auth.users.banned_until`), which:
+
+- Instantly invalidates the user's sessions and blocks new logins — enforced by Supabase Auth itself, no extra schema needed.
+- Leaves `profiles`, `orders`, `order_items`, and `reviews` completely untouched — full order history and account data stay intact.
+
+**Why this matters for this schema specifically:** `orders.user_id` uses `ON DELETE RESTRICT` (by design — historical integrity), while `profiles.id` cascades from `auth.users`. Hard-deleting a user with order history would trigger a delete conflict (the `auth.users → profiles` cascade would be blocked by the `orders` restrict, aborting the transaction). Using **Ban instead of Delete** sidesteps this entirely — there is nothing to fix in the schema, as long as hard delete of `auth.users` is never exposed as an Admin action in the MVP.
+
+---
+
 ## 3. Triggers & RPC Concepts
 
 > **Note:** this section describes _what_ each trigger/function does and _why_ — the actual executable SQL lives in the migration files under `supabase/migrations/` (to be created as a follow-up; see [What's Next](#whats-next)), not in this document. Keeping the two separate means this file stays a stable reference to read, while the `.sql` files are the ones that actually run against the database and evolve with numbered migrations.
@@ -308,7 +349,7 @@ The trade-off: if a product image URL rotates, order history may show a broken i
 
 ### 3.2 Trigger: `set_updated_at`
 
-**Purpose:** Automatically bump `updated_at` whenever a row is updated. Applied to `profiles`, `products`, and `orders`.
+**Purpose:** Automatically bump `updated_at` whenever a row is updated. Applied to `profiles`, `products`, `orders`, and `reviews` (the last one is what makes "edit your own review" possible — see § 1.4).
 
 **Behavior:**
 
@@ -363,7 +404,7 @@ place_order(
 **Logic:**
 
 1. Verify caller is authenticated (`auth.uid() IS NOT NULL`)
-2. Look up the caller's row in `profiles`. If `profiles.phone IS NULL`, **raise an exception and abort** — a contact number is mandatory for every order, checked server-side regardless of what the client sends
+2. Look up the caller's row in `profiles`. If `profiles.phone IS NULL`, **raise an exception and abort** — a contact number is mandatory for every order, checked server-side regardless of what the client sends (see [2.5](#25-checkout-snapshot-customer_name--customer_phone))
 3. Fetch fresh prices from `products` for all `product_id` values
 4. Recalculate subtotals, per-bundle discounts (using the same 3+ rule), and grand total
 5. Insert into `orders` (status = `pending`), including `customer_name` and `customer_phone` as **snapshots** — the values passed in (which the Checkout UI prefilled from `profiles`, possibly edited by the customer)
@@ -422,4 +463,4 @@ This document (`db-schema.md`) stays as the **single source of truth for what th
 
 ---
 
-_End of Database Schema — v1.1 MVP_
+_End of Database Schema — v1.2 MVP_

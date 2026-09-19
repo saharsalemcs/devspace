@@ -1,13 +1,8 @@
 @import "tailwindcss";
-@import "tw-animate-css"; /* used by shadcn/ui for data-[state] animations */
+@import "tw-animate-css";
 
-/* ==========================================================
- * SHADCN/UI SEMANTIC VARIABLES
- * Plain CSS custom properties — consumed by shadcn components
- * via bg-primary, text-muted-foreground, etc.
- * ========================================================== */
 :root {
-  --radius: 0.75rem; /* 12px — matches our design-system radius-xl */
+  --radius: 0.75rem;
 
   --background: #0a0a0b;
   --foreground: #f5f5f7;
@@ -37,7 +32,6 @@
   --input: #26262b;
   --ring: #ff7d45;
 
-  /* Chart colors (used by shadcn chart components, if adopted post-MVP) */
   --chart-1: #ff5a1f;
   --chart-2: #3b82f6;
   --chart-3: #22c55e;
@@ -221,9 +215,6 @@
   }
 }
 
-/* ==========================================================
- * BASE LAYER
- * ========================================================== */
 @layer base {
   * {
     border-color: var(--border);

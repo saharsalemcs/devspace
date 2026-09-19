@@ -1,8 +1,16 @@
 # DevSpace — Project Specification
 
-**Version:** 1.1 (MVP)
+**Version:** 1.2 (MVP)
 **Document Type:** Functional Specification
-**Last Updated:** September 18, 2026
+**Last Updated:** September 19, 2026
+
+**Changelog (v1.1 → v1.2):**
+
+- § 2.2 (#7): corrected to match the actual schema — product gallery is an `images text[]` array column on `products` (no separate `product_images` table)
+- § 3 / § 4.5: reviews permissions clarified — **Customer** can edit/delete **their own** review; **Admin** can delete **any** review but cannot edit
+- § 4.6: checkout name/phone fields are now explicitly documented as prefilled from the profile, editable per order
+- § 4.8: added a note that customer account moderation (ban) is done directly via the Supabase Dashboard, not an in-app Admin feature, for MVP
+- Appendix A: added rows for Account Moderation and updated the Reviews row
 
 ---
 
@@ -62,7 +70,7 @@ Deliver a fully functional online store where users can browse products, use the
    - Logged-in → on login, merge localStorage cart into `cart_items` table; DB becomes source of truth
 5. **Bundle representation** — each bundle product remains a separate line item (in cart and order), linked by a shared `bundle_id`. Simplifies reporting, refunds, and per-item operations.
 6. **Route Groups** — organized by user context: `(shop)`, `(auth)`, `(account)`, `(admin)`.
-7. **Product images** — stored in a dedicated Supabase Storage bucket; each product supports a gallery via `product_images` table with an `is_primary` flag.
+7. **Product images** — stored in a dedicated Supabase Storage bucket; each product has a single primary image (`products.image_url`) plus an additional gallery stored as a plain array column (`products.images text[]`) — no separate `product_images` table in the MVP.
 8. **Fixed builder slots** — 5–8 predefined categories, defined in DB (not hardcoded) but not editable via UI in MVP; identified via `is_builder_slot = true`.
 9. **State separation** — React Query owns all server state (products, orders, reviews); Zustand owns transient client state (guest cart, current Desk Builder selections, UI toggles).
 10. **Component foundation via shadcn/ui** — base primitives (Button, Card, Dialog, Tooltip, Badge, Input, Select, etc.) are scaffolded via the shadcn CLI as owned source code (not an npm dependency), then themed via CSS variables to match the Ember Orange dark design system. This keeps components fully customizable and Server-Component-friendly where possible (interactive primitives like Dialog/Tooltip are client components by nature).
@@ -84,17 +92,21 @@ Deliver a fully functional online store where users can browse products, use the
 | Checkout (place order) |  ❌   |    ✅    |  ✅   |
 | View own order history |  ❌   |    ✅    |  ✅   |
 | Post a review          |  ❌   |    ✅    |  ✅   |
+| Edit own review        |  ❌   |    ✅    |  ✅   |
+| Delete own review      |  ❌   |    ✅    |  ✅   |
 | Edit own profile       |  ❌   |    ✅    |  ✅   |
 | Access Admin Dashboard |  ❌   |    ❌    |  ✅   |
 | Product CRUD           |  ❌   |    ❌    |  ✅   |
 | Update order status    |  ❌   |    ❌    |  ✅   |
-| Delete reviews         |  ❌   |    ❌    |  ✅   |
+| Delete any review      |  ❌   |    ❌    |  ✅   |
 | View KPI dashboard     |  ❌   |    ❌    |  ✅   |
 
 **Notes:**
 
 - The **Admin** is a single, pre-provisioned account. The role is assigned directly in the database — not via public signup.
 - Guest actions requiring authentication (checkout, posting a review) redirect to `/login` while preserving the return URL.
+- **Reviews:** a Customer can edit or delete only _their own_ review; Admin can _delete_ (but not edit) _any_ review — moderation, not authorship.
+- **Customer account moderation (ban):** if an Admin needs to block a customer, this is done directly via the Supabase Dashboard (Auth → Ban User) — there is no in-app "Customers" page in the MVP Admin Dashboard for this. See § 4.8.
 
 ---
 
@@ -143,12 +155,16 @@ Deliver a fully functional online store where users can browse products, use the
 - No purchase verification required
 - Reviews appear **immediately** (no moderation queue)
 - Rating (1–5 stars) + optional comment
-- Admin can **delete** inappropriate reviews (no edit)
+- **Customer** can **edit** or **delete** their own review at any time
+- **Admin** can **delete** any review (inappropriate content) — cannot edit another customer's review
 
 ### 4.6 Checkout (COD / Mock)
 
 - Requires authentication
 - Form: full name, phone, shipping address
+  - **Name and phone fields are prefilled from the customer's `profiles` row** (`full_name`, `phone`) and remain editable for this specific order (e.g., a gift order, a different contact number)
+  - Submitting the form sends the (possibly edited) name/phone to `place_order`, which snapshots them onto the `orders` row — never re-joined from `profiles` afterward
+  - Server-side guard: if the customer's `profiles.phone` is `NULL`, `place_order` rejects the request regardless of what the client sends
 - Order summary with server-calculated final total
 - Payment method: **Cash on Delivery** — no real payment gateway
 - On submit → order created with status `pending`, cart cleared
@@ -164,12 +180,14 @@ Deliver a fully functional online store where users can browse products, use the
 - **Products:** full CRUD, manage image gallery per product, deactivate/reactivate
 - **Orders:** list all orders, filter by status, update status through the lifecycle:
   `pending → processing → shipped → delivered`
-- **Reviews:** list all reviews, delete inappropriate ones
+- **Reviews:** list all reviews, delete inappropriate ones (delete only — cannot edit another customer's review)
 - **KPI Cards** (numeric only, no charts in MVP):
   - Total orders (all-time / this month)
   - Total revenue
   - Number of registered customers
   - Number of active products
+
+> **Out of scope for MVP:** customer account management (viewing/banning individual customers) has no in-app page. It's handled directly via the Supabase Dashboard (Auth → Ban User) by whoever has project access. An in-app "Customers" section is a candidate for a future version.
 
 ### 4.9 Authentication
 
@@ -236,24 +254,25 @@ Organized by App Router route groups.
 
 ## Appendix A — Locked Decisions Summary
 
-| Area                | Decision                                                                 |
-| ------------------- | ------------------------------------------------------------------------ |
-| Payment             | COD / Mock only (no real gateway in MVP)                                 |
-| Currency            | EGP                                                                      |
-| UI Language         | English only                                                             |
-| Theme               | Dark Mode (default, no toggle in MVP)                                    |
-| Accent Color        | Ember Orange                                                             |
-| Typography          | Inter/Geist (sans) + JetBrains Mono/Geist Mono (mono for prices & specs) |
-| UI Component Base   | shadcn/ui (owned source code, themed via CSS variables)                  |
-| Compatibility Logic | None (any product from any slot)                                         |
-| Bundle Discount     | 5% on 3+ components, server-calculated                                   |
-| Cart Storage        | Guest → localStorage · Logged-in → DB (merge on login)                   |
-| Product Images      | Multiple per product (gallery), Supabase Storage                         |
-| Inventory           | All in-stock by default (no stock tracking in MVP)                       |
-| Reviews             | Open (no verified purchase), immediate publish, admin delete only        |
-| Admin Account       | Single, pre-provisioned (not via public signup)                          |
-| Version Control     | Git, hosted on GitHub, Conventional Commits                              |
+| Area                | Decision                                                                                                |
+| ------------------- | ------------------------------------------------------------------------------------------------------- |
+| Payment             | COD / Mock only (no real gateway in MVP)                                                                |
+| Currency            | EGP                                                                                                     |
+| UI Language         | English only                                                                                            |
+| Theme               | Dark Mode (default, no toggle in MVP)                                                                   |
+| Accent Color        | Ember Orange                                                                                            |
+| Typography          | Inter/Geist (sans) + JetBrains Mono/Geist Mono (mono for prices & specs)                                |
+| UI Component Base   | shadcn/ui (owned source code, themed via CSS variables)                                                 |
+| Compatibility Logic | None (any product from any slot)                                                                        |
+| Bundle Discount     | 5% on 3+ components, server-calculated                                                                  |
+| Cart Storage        | Guest → localStorage · Logged-in → DB (merge on login)                                                  |
+| Product Images      | Multiple per product — `image_url` (primary) + `images text[]` (gallery), Supabase Storage              |
+| Inventory           | All in-stock by default (no stock tracking in MVP)                                                      |
+| Reviews             | Open (no verified purchase), immediate publish; customer edits/deletes own; admin deletes any (no edit) |
+| Account Moderation  | Ban via Supabase Dashboard (Auth → Ban User) — no in-app Customers page in MVP                          |
+| Admin Account       | Single, pre-provisioned (not via public signup)                                                         |
+| Version Control     | Git, hosted on GitHub, Conventional Commits                                                             |
 
 ---
 
-_End of Specification — v1.1 MVP_
+_End of Specification — v1.2 MVP_

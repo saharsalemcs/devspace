@@ -1,9 +1,20 @@
 # DevSpace — Task Breakdown & Execution Plan
 
-**Version:** 1.0 (MVP)
+**Version:** 1.1 (MVP)
 **Document Type:** Actionable Checklist
 **Companion To:** project-spec.md · design-system.md · db-schema.md
-**Last Updated:** September 17, 2026
+**Last Updated:** September 19, 2026
+
+**Changelog (v1.0 → v1.1):**
+
+- § 2.3–2.8: migration numbering reconciled with `db-schema.md` — one file per concern (`001_create_tables.sql`, `002_triggers.sql`, `003_functions.sql`, `004_rls_policies.sql`), Storage bucket setup moved after RLS
+- § 2.4: `set_updated_at` trigger now also applied to `reviews` (needed for the new edit-own-review feature)
+- § 2.5: `place_order` signature updated to include `customer_name` / `customer_phone`, plus the server-side phone-missing rejection case
+- § 2.7: `reviews` RLS bullet updated — author UPDATE/DELETE own row, admin DELETE any row only
+- § 7.1 / § 7.3: added customer edit/delete-own-review hooks and flow (previously only admin delete existed)
+- § 8.1 / § 8.2: added the checkout prefill-from-profile flow and passing `customer_name`/`customer_phone` to `place_order`
+- § 9: added a scope note — no in-app Customers/ban page in MVP (handled via Supabase Dashboard)
+- Post-MVP Backlog: added "In-app Customers page for Admin"
 
 ---
 
@@ -177,62 +188,65 @@
 
 ### 2.1 Supabase Project
 
-- [ ] Create Supabase project on supabase.com
-- [ ] Copy URL + anon key + service role key into `.env.local`
-- [ ] Enable email/password auth in Auth settings
-- [ ] Disable email confirmation for MVP dev (re-enable in production)
+- [x] Create Supabase project on supabase.com
+- [x] Copy URL + anon key + service role key into `.env.local`
+- [x] Enable email/password auth in Auth settings
+- [x] Disable email confirmation for MVP dev (re-enable in production)
 
 ### 2.2 Supabase Clients
 
-- [ ] Create `src/lib/supabase/client.ts` (browser client)
-- [ ] Create `src/lib/supabase/server.ts` (server component client)
-- [ ] Create `src/lib/supabase/middleware.ts` (edge middleware helper)
-- [ ] Create `src/middleware.ts` at project root to refresh session on each request
+- [x] Create `lib/supabase/client.ts` (browser client)
+- [x] Create `lib/supabase/server.ts` (server component client)
+- [x] Create `lib/supabase/proxy.ts` (edge proxy helper)
+- [x] Create `proxy.ts` at project root to refresh session on each request
 
 ### 2.3 Database Migrations
 
-- [ ] Migration 001: `CREATE TABLE profiles`
-- [ ] Migration 002: `CREATE TABLE categories` + indexes
-- [ ] Migration 003: `CREATE TABLE products` + indexes (including full-text search GIN index)
-- [ ] Migration 004: `CREATE TABLE reviews` + `UNIQUE(product_id, user_id)`
-- [ ] Migration 005: `CREATE TABLE orders` + indexes
-- [ ] Migration 006: `CREATE TABLE order_items` + indexes
-- [ ] Migration 007: `CREATE TABLE cart_items` + unique constraint
+- [ ] `supabase/migrations/001_create_tables.sql` — all 7 tables in dependency order:
+  - [ ] `CREATE TABLE profiles`
+  - [ ] `CREATE TABLE categories` + indexes
+  - [ ] `CREATE TABLE products` + indexes (including full-text search GIN index)
+  - [ ] `CREATE TABLE reviews` + `UNIQUE(product_id, user_id)`
+  - [ ] `CREATE TABLE orders` + indexes
+  - [ ] `CREATE TABLE order_items` + indexes
+  - [ ] `CREATE TABLE cart_items` + unique constraint
 
-### 2.4 Triggers
+### 2.4 Triggers — `supabase/migrations/002_triggers.sql`
 
 - [ ] Create `handle_new_user()` function
 - [ ] Create `on_auth_user_created` trigger on `auth.users`
 - [ ] Create `set_updated_at()` function
-- [ ] Apply `set_updated_at` trigger to `profiles`, `products`, `orders`
+- [ ] Apply `set_updated_at` trigger to `profiles`, `products`, `orders`, **`reviews`** (reviews now editable by their author — needs `updated_at`; see db-schema.md § 1.4)
 - [ ] Test: register a user → verify a `profiles` row is auto-created
 
-### 2.5 RPC Functions
+### 2.5 RPC Functions — `supabase/migrations/003_functions.sql`
 
 - [ ] Create `calculate_bundle_total(product_ids uuid[])` function
 - [ ] Test with 2 IDs (no discount) and 3+ IDs (5% discount applied)
-- [ ] Create `place_order(items jsonb, shipping_address jsonb, payment_method text)` function
-- [ ] Test place_order with a mock cart payload
+- [ ] Create `place_order(items jsonb, shipping_address jsonb, payment_method text, customer_name text, customer_phone text)` function
+  - [ ] Fetch caller's `profiles.phone`; raise exception + abort if `NULL` (server-side guard — see db-schema.md § 2.5)
+  - [ ] Snapshot the passed-in `customer_name` / `customer_phone` onto the new `orders` row
+- [ ] Test `place_order` with a mock cart payload, including the phone-missing rejection case
 
-### 2.6 Views
+### 2.6 Views — `supabase/migrations/003_functions.sql` (same file as 2.5)
 
 - [ ] Create `product_rating_stats` view
 
-### 2.7 Storage
-
-- [ ] Create Supabase Storage bucket `product-images` (public read)
-- [ ] Set upload policy: authenticated admins only
-
-### 2.8 RLS Policies
+### 2.7 RLS Policies — `supabase/migrations/004_rls_policies.sql`
 
 - [ ] Enable RLS on all tables
-- [ ] `profiles`: users SELECT/UPDATE own row; admins SELECT all
+- [ ] `profiles`: users SELECT/UPDATE own row (excluding `role` column); admins SELECT all
 - [ ] `categories`: public SELECT; admin INSERT/UPDATE/DELETE
 - [ ] `products`: public SELECT (where `is_active`); admin full access
-- [ ] `reviews`: public SELECT; authenticated INSERT own; admin DELETE
+- [ ] `reviews`: public SELECT; authenticated INSERT own; authenticated UPDATE/DELETE **own row only**; admin DELETE **any** row (no admin UPDATE)
 - [ ] `orders`: users SELECT own; INSERT via RPC only; admin SELECT/UPDATE all
 - [ ] `order_items`: SELECT if parent order is visible; INSERT only via place_order RPC
 - [ ] `cart_items`: users full access to own rows only
+
+### 2.8 Storage — bucket setup (post-RLS)
+
+- [ ] Create Supabase Storage bucket `product-images` (public read)
+- [ ] Set upload policy: authenticated admins only
 
 ### 2.9 Seed Data
 
@@ -277,9 +291,9 @@
 - [ ] Create `updatePassword` action
 - [ ] Return user-friendly error messages
 
-### 3.4 Session & Middleware
+### 3.4 Session & Proxy
 
-- [ ] Update middleware to protect `(account)` and `(admin)` route groups
+- [ ] Update proxy to protect `(account)` and `(admin)` route groups
 - [ ] For `(admin)`, also check `role = 'admin'` — redirect if customer
 - [ ] Create `getSession()` helper in `src/lib/supabase/auth.ts`
 - [ ] Create `getProfile()` helper (fetches profile + role)
@@ -341,7 +355,7 @@
 - [ ] Add `addItem`, `removeItem`, `updateQuantity`, `clearCart` actions
 - [ ] Add `addBundle(items, bundle_id)` action
 - [ ] Add `removeBundle(bundle_id)` action
-- [ ] Persist to localStorage via Zustand `persist` middleware
+- [ ] Persist to localStorage via Zustand `persist` proxy
 
 ### 5.2 Cart UI
 
@@ -412,7 +426,9 @@
 
 - [ ] Create `useReviews(product_id)` hook
 - [ ] Create `useSubmitReview()` mutation hook
-- [ ] Create `useDeleteReview()` mutation hook (admin)
+- [ ] Create `useUpdateReview()` mutation hook (customer, own review only)
+- [ ] Create `useDeleteOwnReview()` mutation hook (customer, own review only)
+- [ ] Create `useDeleteReview()` mutation hook (admin, any review)
 
 ### 7.2 Review Display
 
@@ -420,6 +436,7 @@
 - [ ] List reviews sorted by newest
 - [ ] Star rating renderer (empty/filled stars)
 - [ ] Show reviewer name (from `profiles.full_name`) + date
+- [ ] Admin view: show a "Delete" action on every review (moderation only, no edit)
 
 ### 7.3 Review Submission
 
@@ -429,9 +446,10 @@
 - [ ] Optional comment textarea
 - [ ] Submit action (handles unique-constraint error: user already reviewed)
 - [ ] Optimistic update on submit
-- [ ] Show existing review with "Edit / Delete" if user already reviewed
+- [ ] If the user already reviewed this product, show **their own review** with "Edit" and "Delete" actions (via `useUpdateReview`/`useDeleteOwnReview`) instead of the submission form
+- [ ] Edit mode reuses the same form, pre-filled with the existing rating/comment
 
-**✅ Phase 7 Complete when:** logged-in customers can post reviews and they appear immediately.
+**✅ Phase 7 Complete when:** logged-in customers can post, edit, and delete their own reviews (appearing immediately), and admins can delete any review.
 
 ---
 
@@ -439,16 +457,18 @@
 
 ### 8.1 Checkout Page
 
-- [ ] Build `/checkout` page (protected by middleware)
-- [ ] Left column: shipping form (full_name, phone, street, city, governorate, postal_code, notes)
+- [ ] Build `/checkout` page (protected by proxy)
+- [ ] Fetch the current user's `profiles` row (`full_name`, `phone`) on page load
+- [ ] Left column: shipping form — `customer_name` + `customer_phone` fields **prefilled** from `profiles` (editable), plus `street, city, governorate, postal_code, notes`
 - [ ] Right column: order summary (items, subtotal, discount, total)
-- [ ] Zod schema for shipping address
+- [ ] Zod schema for shipping address (separate from `customer_name`/`customer_phone` validation)
 - [ ] Payment method radio (COD only in MVP)
 - [ ] "Place Order" button (disabled while submitting)
 
 ### 8.2 Place Order Action
 
-- [ ] Server action calls `place_order` RPC with cart items + shipping info
+- [ ] Server action calls `place_order` RPC with cart items + shipping info + `customer_name` + `customer_phone` (from the form, prefilled-then-possibly-edited)
+- [ ] Surface the RPC's "missing phone" rejection as a clear form error (guides the user to add a phone number to their profile — or just retype it in the form — before retrying)
 - [ ] On success: clear cart (Zustand + `cart_items` in DB)
 - [ ] Redirect to `/checkout/success?order_id=...`
 - [ ] Handle errors (toast + preserve form data)
@@ -484,11 +504,13 @@
 
 ## Phase 9: Admin Dashboard
 
+> **Scope note:** no "Customers" page in this phase — banning/managing customer accounts is done directly via the Supabase Dashboard (Auth → Ban User) for MVP. See `project-spec.md` § 4.8.
+
 ### 9.1 Admin Layout
 
 - [ ] Build `(admin)/layout.tsx` with sidebar navigation
 - [ ] Sidebar links: Dashboard, Products, Orders, Reviews
-- [ ] Confirm middleware redirects non-admins to `/`
+- [ ] Confirm proxy redirects non-admins to `/`
 
 ### 9.2 Dashboard Overview
 
@@ -603,7 +625,8 @@ Ideas parked for after MVP ships — do not scope-creep into v1.0:
 - Discount codes / promo campaigns
 - Guest checkout (no account required)
 - Verified Purchase reviews
+- In-app Customers page for Admin (view/ban/unban) — MVP uses the Supabase Dashboard directly
 
 ---
 
-_End of Task Breakdown — v1.0 MVP_
+_End of Task Breakdown — v1.1 MVP_
