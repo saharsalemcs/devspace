@@ -42,7 +42,9 @@ export function RegisterForm() {
   return (
     <AuthCard>
       <CardHeader>
-        <CardTitle>Create an account</CardTitle>
+        <CardTitle className="text-h3 font-semibold">
+          Create an account
+        </CardTitle>
         <CardDescription className="text-xs">
           Join DevSpace to start building.
         </CardDescription>
@@ -115,7 +117,11 @@ export function RegisterForm() {
             </p>
           ) : null}
 
-          <Button type="submit" loading={pending} className="w-full">
+          <Button
+            type="submit"
+            loading={pending}
+            className="h-10 w-full text-base"
+          >
             Create account
           </Button>
         </form>

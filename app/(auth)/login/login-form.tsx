@@ -48,8 +48,10 @@ export function LoginForm() {
   return (
     <AuthCard>
       <CardHeader>
-        <CardTitle>Sign in</CardTitle>
-        <CardDescription>Welcome back to DevSpace.</CardDescription>
+        <CardTitle className="text-h3 font-semibold">Sign in</CardTitle>
+        <CardDescription className="text-body">
+          Welcome back to DevSpace.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form
@@ -96,7 +98,11 @@ export function LoginForm() {
             </Link>
           </div>
 
-          <Button type="submit" loading={pending} className="w-full">
+          <Button
+            type="submit"
+            loading={pending}
+            className="h-10 w-full text-base"
+          >
             Sign in
           </Button>
         </form>

@@ -44,8 +44,8 @@ export function ForgotPasswordForm() {
   return (
     <AuthCard>
       <CardHeader>
-        <CardTitle>Forgot password</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-h3 font-semibold">Forgot password</CardTitle>
+        <CardDescription className="text-body">
           Enter your email and we&apos;ll send you a reset link.
         </CardDescription>
       </CardHeader>
@@ -70,7 +70,11 @@ export function ForgotPasswordForm() {
               />
             </FormField>
 
-            <Button type="submit" loading={pending} className="w-full">
+            <Button
+              type="submit"
+              loading={pending}
+              className="h-10 w-full text-base"
+            >
               Send reset link
             </Button>
           </form>

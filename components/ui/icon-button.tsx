@@ -1,15 +1,17 @@
-import * as React from "react"
-import { cn } from "cn"
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 
-type IconButtonSize = "icon-xs" | "icon-sm" | "icon" | "icon-lg"
+type IconButtonSize = "icon-xs" | "icon-sm" | "icon" | "icon-lg";
 
-interface IconButtonProps
-  extends Omit<React.ComponentProps<typeof Button>, "size"> {
-  size?: IconButtonSize
+interface IconButtonProps extends Omit<
+  React.ComponentProps<typeof Button>,
+  "size"
+> {
+  size?: IconButtonSize;
   /** Icon buttons carry no visible label — an accessible name is required. */
-  "aria-label": string
+  "aria-label": string;
 }
 
 function IconButton({
@@ -26,7 +28,7 @@ function IconButton({
       className={cn("shrink-0", className)}
       {...props}
     />
-  )
+  );
 }
 
-export { IconButton }
+export { IconButton };

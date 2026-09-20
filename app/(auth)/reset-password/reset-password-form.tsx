@@ -51,8 +51,10 @@ export function ResetPasswordForm() {
   return (
     <AuthCard>
       <CardHeader>
-        <CardTitle>Set a new password</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-h3 font-semibold">
+          Set a new password
+        </CardTitle>
+        <CardDescription className="text-body">
           Choose a new password for your account.
         </CardDescription>
       </CardHeader>
@@ -101,7 +103,11 @@ export function ResetPasswordForm() {
             </p>
           ) : null}
 
-          <Button type="submit" loading={pending} className="w-full">
+          <Button
+            type="submit"
+            loading={pending}
+            className="h-10 w-full text-base"
+          >
             Update password
           </Button>
         </form>

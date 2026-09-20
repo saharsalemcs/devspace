@@ -1,25 +1,21 @@
-import Link from "next/link"
-import { SearchIcon, ShoppingCartIcon } from "lucide-react"
+import Link from "next/link";
+import { SearchIcon, ShoppingCartIcon } from "lucide-react";
 
-import { Container } from "@/components/layout/container"
-import { Button } from "@/components/ui/button"
-import { IconButton } from "@/components/ui/icon-button"
-import { Input } from "@/components/ui/input"
+import { Container } from "@/components/layout/container";
+import { Logo } from "@/components/layout/logo";
+import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
+import { Input } from "@/components/ui/input";
 
-// Layout shell only — Phase 4.2 wires up real search, Phase 5.2 adds the
-// cart item-count badge, and Phase 3.5 swaps "Sign In" for the user menu.
 function Navbar() {
   return (
     <header
       data-slot="navbar"
-      className="sticky top-0 z-30 border-b border-neutral-700 bg-background/80 backdrop-blur-sm"
+      className="bg-background/80 sticky top-0 z-30 border-b border-neutral-700 backdrop-blur-sm"
     >
       <Container className="flex h-16 items-center gap-4">
-        <Link
-          href="/"
-          className="shrink-0 text-h4 font-bold text-foreground"
-        >
-          Dev<span className="text-accent">Space</span>
+        <Link href="/" className="shrink-0 transition-opacity hover:opacity-90">
+          <Logo />
         </Link>
 
         <div className="relative hidden max-w-md flex-1 sm:block">
@@ -52,7 +48,7 @@ function Navbar() {
         </div>
       </Container>
     </header>
-  )
+  );
 }
 
-export { Navbar }
+export { Navbar };

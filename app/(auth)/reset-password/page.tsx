@@ -17,8 +17,8 @@ export default async function ResetPasswordPage() {
     return (
       <AuthCard>
         <CardHeader>
-          <CardTitle>Link expired</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-h3 font-semibold">Link expired</CardTitle>
+          <CardDescription className="text-body">
             This password reset link is invalid or has expired. Request a new
             one from the forgot password page.
           </CardDescription>
