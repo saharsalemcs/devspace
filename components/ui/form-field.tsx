@@ -1,19 +1,16 @@
-import * as React from "react"
-import type { FieldError } from "react-hook-form"
-import { cn } from "cn"
+import * as React from "react";
+import type { FieldError } from "react-hook-form";
+import { cn } from "cn";
 
-import { Label } from "@/components/ui/label"
+import { Label } from "@/components/ui/label";
 
 interface FormFieldProps extends React.ComponentProps<"div"> {
-  label: string
-  htmlFor: string
-  error?: FieldError | string
-  hint?: string
+  label: string;
+  htmlFor: string;
+  error?: FieldError | string;
+  hint?: string;
 }
 
-// Composes Label + a form control (Input/Textarea/Select) + an error
-// message rendered from `--destructive`, for use with React Hook Form's
-// `register()`/`Controller` and Zod resolvers — design-system.md § 5.4.
 function FormField({
   label,
   htmlFor,
@@ -23,7 +20,7 @@ function FormField({
   children,
   ...props
 }: FormFieldProps) {
-  const message = typeof error === "string" ? error : error?.message
+  const message = typeof error === "string" ? error : error?.message;
 
   return (
     <div
@@ -41,7 +38,7 @@ function FormField({
         <p className="text-body-sm text-neutral-400">{hint}</p>
       ) : null}
     </div>
-  )
+  );
 }
 
-export { FormField }
+export { FormField };
