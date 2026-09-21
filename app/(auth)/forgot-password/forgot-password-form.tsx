@@ -45,7 +45,7 @@ export function ForgotPasswordForm() {
     <AuthCard>
       <CardHeader>
         <CardTitle className="text-h3 font-semibold">Forgot password</CardTitle>
-        <CardDescription className="text-body">
+        <CardDescription className="text-sm">
           Enter your email and we&apos;ll send you a reset link.
         </CardDescription>
       </CardHeader>

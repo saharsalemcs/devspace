@@ -49,7 +49,7 @@ export function LoginForm() {
     <AuthCard>
       <CardHeader>
         <CardTitle className="text-h3 font-semibold">Sign in</CardTitle>
-        <CardDescription className="text-body">
+        <CardDescription className="text-sm">
           Welcome back to DevSpace.
         </CardDescription>
       </CardHeader>

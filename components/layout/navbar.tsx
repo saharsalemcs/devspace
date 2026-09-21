@@ -3,11 +3,17 @@ import { SearchIcon, ShoppingCartIcon } from "lucide-react";
 
 import { Container } from "@/components/layout/container";
 import { Logo } from "@/components/layout/logo";
+import { UserMenu } from "@/components/layout/user-menu";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
+import { getProfile, getSession } from "@/lib/supabase/auth";
 
-function Navbar() {
+// Layout shell — Phase 4.2 wires up real search, Phase 5.2 adds the cart
+// item-count badge.
+async function Navbar() {
+  const [session, profile] = await Promise.all([getSession(), getProfile()]);
+
   return (
     <header
       data-slot="navbar"
@@ -37,14 +43,21 @@ function Navbar() {
             <ShoppingCartIcon />
           </IconButton>
 
-          <Button
-            variant="secondary"
-            size="sm"
-            render={<Link href="/login" />}
-            nativeButton={false}
-          >
-            Sign In
-          </Button>
+          {session ? (
+            <UserMenu
+              fullName={profile?.full_name ?? null}
+              email={session.email}
+            />
+          ) : (
+            <Button
+              variant="secondary"
+              size="sm"
+              render={<Link href="/login" />}
+              nativeButton={false}
+            >
+              Sign In
+            </Button>
+          )}
         </div>
       </Container>
     </header>

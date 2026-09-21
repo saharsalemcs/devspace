@@ -45,7 +45,7 @@ export function RegisterForm() {
         <CardTitle className="text-h3 font-semibold">
           Create an account
         </CardTitle>
-        <CardDescription className="text-xs">
+        <CardDescription className="text-sm">
           Join DevSpace to start building.
         </CardDescription>
       </CardHeader>
