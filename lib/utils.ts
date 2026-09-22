@@ -1,4 +1,28 @@
-export { cn } from "cn";
+import { createCn } from "cn/config";
+
+export const cn = createCn({
+  extend: {
+    classGroups: {
+      "font-size": [
+        {
+          text: [
+            "display",
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "body",
+            "body-lg",
+            "body-sm",
+            "caption",
+            "price",
+            "price-lg",
+          ],
+        },
+      ],
+    },
+  },
+});
 
 export function formatPrice(amount: number) {
   return new Intl.NumberFormat("en-EG", {
