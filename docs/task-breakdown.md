@@ -105,12 +105,10 @@
 
 ### 0.8 Offline Detection Setup
 
-> Next.js 16's `useOffline` (`experimental`) only covers Next-native navigation, prefetch, and Server Action requests — it does **not** touch React Query/Supabase client-side fetches, which keep their own retry behavior (see § 0.7 / Phase 4). Test with `next build && next start` — dev mode doesn't reflect real offline behavior.
-
-- [ ] Enable `experimental.useOffline` in `next.config.ts`
-- [ ] Create `OfflineBanner` client component (`useOffline()` from `next/offline`) — persistent site-wide banner shown whenever connectivity drops
-- [ ] Mount `OfflineBanner` in root `layout.tsx` so it's visible on every route
-- [ ] Commit: `feat: enable offline detection and connectivity banner`
+- [x] Enable `experimental.useOffline` in `next.config.ts`
+- [x] Create `OfflineBanner` client component (`useOffline()` from `next/offline`) — persistent site-wide banner shown whenever connectivity drops
+- [x] Mount `OfflineBanner` in root `layout.tsx` so it's visible on every route
+- [x] Commit: `feat: enable offline detection and connectivity banner`
 
 **✅ Phase 0 Complete when:** dev server runs, repo is pushed to GitHub with branch protection, shadcn/ui is initialized, folder structure is in place, all deps installed and wired.
 
@@ -133,8 +131,6 @@
 
 ### 1.2 Fonts Setup
 
-> Note: per 0.2/0.3, this project uses `next/font/google` (Geist, Geist_Mono) instead of the `geist` npm package — already wired up in `app/layout.tsx` during bootstrap.
-
 - [x] Import `Geist` and `Geist_Mono` from `next/font/google` in root `layout.tsx`
 - [x] Apply `geistSans.variable` and `geistMono.variable` to `<html>` className
 - [x] Verify the `--font-geist-sans` / `--font-geist-mono` vars are picked up by `@theme`
@@ -142,8 +138,6 @@
 - [x] Commit: `feat: configure geist fonts`
 
 ### 1.3 shadcn/ui Components — Install Base Set
-
-> Note: this shadcn setup uses `base-ui` primitives (not Radix) and style `base-nova` (set in 0.4) — CLI output differs from the doc's example, functionality is equivalent.
 
 - [x] Run `npx shadcn@latest add button card dialog tooltip badge input textarea select label separator skeleton sonner`
 - [x] Verify each file appears under `components/ui/`
@@ -277,40 +271,42 @@
 
 ### 3.1 Zod Schemas
 
-- [ ] Create `loginSchema` (email, password)
-- [ ] Create `registerSchema` (email, password, confirm, full_name) with strength rules
-- [ ] Create `forgotPasswordSchema` (email)
-- [ ] Create `resetPasswordSchema` (password, confirm)
+- [x] Create `loginSchema` (email, password)
+- [x] Create `registerSchema` (email, password, confirm, full_name) with strength rules
+- [x] Create `forgotPasswordSchema` (email)
+- [x] Create `resetPasswordSchema` (password, confirm)
 
 ### 3.2 Auth Pages
 
-- [ ] Build `(auth)/layout.tsx` (centered card, no navbar)
-- [ ] Build `/login` page with form + submit action
-- [ ] Build `/register` page with form + submit action
-- [ ] Build `/forgot-password` page
-- [ ] Build `/reset-password` page
-- [ ] Add "return URL" (`next`) query param handling for post-login redirect
+- [x] Build `(auth)/layout.tsx` (centered card, no navbar)
+- [x] Build `/login` page with form + submit action
+- [x] Build `/register` page with form + submit action
+- [x] Build `/forgot-password` page
+- [x] Build `/reset-password` page — guards itself server-side: renders a "link expired" state instead of the form when there's no recovery session
+- [x] Add "return URL" (`next`) query param handling for post-login redirect — sanitized against open-redirect payloads (`//evil.com`, `https://evil.com`) via `isSafeRedirect()` in `lib/utils.ts`
+- [x] Add `app/auth/confirm/route.ts` — not in the original checklist, but required: this is the callback Supabase's auth emails link to (`verifyOtp` on the emailed `token_hash`), needed for `/forgot-password` → `/reset-password` (and later, signup confirmation) to work at all with `@supabase/ssr`
+  > **Manual step still needed:** the Supabase Dashboard's "Reset Password" email template must be pointed at `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next={{ .RedirectTo }}` (Auth → Email Templates) — this lives in the Supabase project config, not the repo, so it can't be done from here.
 
 ### 3.3 Server Actions
 
-- [ ] Create `signIn` server action
-- [ ] Create `signUp` server action
-- [ ] Create `signOut` server action
-- [ ] Create `requestPasswordReset` action
-- [ ] Create `updatePassword` action
-- [ ] Return user-friendly error messages
+- [x] Create `signIn` server action — `app/(auth)/login/actions.ts`
+- [x] Create `signUp` server action — `app/(auth)/register/actions.ts`
+- [x] Create `signOut` server action — `lib/supabase/auth-actions.ts` (no route of its own; the trigger is the global navbar menu)
+- [x] Create `requestPasswordReset` action — `app/(auth)/forgot-password/actions.ts`
+- [x] Create `updatePassword` action — `app/(auth)/reset-password/actions.ts`
+- [x] Return user-friendly error messages — `lib/supabase/errors.ts` maps known Supabase Auth error strings to plain-language copy
 
 ### 3.4 Session & Proxy
 
-- [ ] Update proxy to protect `(account)` and `(admin)` route groups
-- [ ] For `(admin)`, also check `role = 'admin'` — redirect if customer
-- [ ] Create `getSession()` helper in `src/lib/supabase/auth.ts`
-- [ ] Create `getProfile()` helper (fetches profile + role)
+- [x] Update proxy to protect `(account)` and `(admin)` route groups — `lib/supabase/proxy.ts`; route groups aren't in the URL, so this matches the real paths those groups render (`/account`, `/checkout`, `/admin` — project-spec.md § 5.3/5.4), redirecting to `/login?next=<path>` when there's no session (optimistic check — JWT only, no DB read, per Next's "Optimistic checks with Proxy" guidance)
+- [x] For `(admin)`, also check `role = 'admin'` — redirect if customer — scoped to `/admin/*` only, since this needs an actual `profiles` query (role isn't in the JWT); this is a UX shortcut, not the security boundary (see `requireAdmin()` below)
+- [x] Create `getSession()` helper — `lib/supabase/auth.ts`
+- [x] Create `getProfile()` helper (fetches profile + role) — same file; both are the Data Access Layer per Next's guide, memoized per-request with React's `cache()`. Added `requireSession()`/`requireAdmin()` alongside them — the real security boundary, for pages to call directly (`(admin)/layout.tsx` will use `requireAdmin()` in Phase 9.1)
 
 ### 3.5 Auth UI Integration
 
-- [ ] Add user menu to Navbar (avatar/name + logout when logged in, "Sign In" for guest)
-- [ ] Add auth-aware CTAs (e.g., "Log in to checkout" on cart, "Log in to review" on product page)
+- [ ] Add user menu to Navbar (avatar/name + logout when logged in, "Sign In" for guest) — `components/layout/user-menu.tsx` (base-ui `Menu`), wired into `components/layout/navbar.tsx` (now an async Server Component reading `getSession()`/`getProfile()`). Logout forces a full reload (`window.location.href`) rather than a soft redirect — Activity preserves client state across auth changes, so a soft redirect would leave stale cart/form state on screen
+- [ ] Add auth-aware CTAs (e.g., "Log in to checkout" on cart, "Log in to review" on product page) — blocked on the pages themselves (`/cart` is Phase 5, product detail reviews are Phase 7); nothing to attach the CTA to yet
 
 **✅ Phase 3 Complete when:** users can register, log in, log out, reset password; protected routes redirect correctly.
 
@@ -460,9 +456,10 @@
 - [ ] Interactive star selector (1–5)
 - [ ] Optional comment textarea
 - [ ] Submit action (handles unique-constraint error: user already reviewed)
-- [ ] Optimistic update on submit
+- [ ] Optimistic update on submit — wrap the mutation in `useTransition`, and use React's `useOptimistic(reviews, (state, newReview) => [...state, newReview])` so the review appears in the list instantly (rendered with a `pending` style) while `useSubmitReview()` is still in flight; revert automatically if it errors
 - [ ] If the user already reviewed this product, show **their own review** with "Edit" and "Delete" actions (via `useUpdateReview`/`useDeleteOwnReview`) instead of the submission form
 - [ ] Edit mode reuses the same form, pre-filled with the existing rating/comment
+- [ ] Apply the same `useOptimistic` pattern to edit/delete: show the edited text or remove the card immediately, reconciling with the server-confirmed state once `useUpdateReview`/`useDeleteOwnReview` resolves
 
 **✅ Phase 7 Complete when:** logged-in customers can post, edit, and delete their own reviews (appearing immediately), and admins can delete any review.
 
@@ -546,6 +543,7 @@
 - [ ] Image upload to Supabase Storage (primary + gallery multi-upload)
 - [ ] Delete confirmation dialog
 - [ ] Toggle active/inactive switch
+- [ ] Make the toggle optimistic with `useOptimistic(isActive)` + `useTransition` — the switch flips on the current frame on click, then reverts if the update action fails, instead of waiting on a round trip for a simple boolean flip
 
 ### 9.4 Orders Management
 
@@ -553,6 +551,7 @@
 - [ ] Show order ID, customer, total, status, date
 - [ ] Build `/admin/orders/[id]` detail page
 - [ ] Status update dropdown (with allowed transitions)
+- [ ] Make the status change optimistic with `useOptimistic(status)` + `useTransition` — the badge shows the new status the moment it's picked, and reverts to the previous one only if the server rejects the transition
 - [ ] Show customer info + shipping address
 
 ### 9.5 Reviews Moderation
@@ -560,6 +559,7 @@
 - [ ] Build `/admin/reviews` page
 - [ ] List all reviews with product name, reviewer, rating, comment
 - [ ] Delete review button (with confirmation)
+- [ ] Once confirmed, make the removal optimistic — `useOptimistic(reviews, (state, id) => state.filter((r) => r.id !== id))` + `useTransition` — the row disappears immediately instead of waiting on `useDeleteReview()`'s round trip, and reappears with an error toast if the call fails
 
 **✅ Phase 9 Complete when:** admin can manage products, update order statuses, and moderate reviews.
 
@@ -587,7 +587,8 @@
 
 ### 10.4 SEO
 
-- [ ] Add root `metadata` in `layout.tsx` (title template, description, OG image)
+- [ ] Add root `metadata` in `layout.tsx` (title template, description, OG image) — title template + description already set alongside the brand work; only the OG image is left
+- [x] Brand assets: `components/layout/logo.tsx` (mark + wordmark lockup), `app/icon.svg`, `app/favicon.ico` (16/32/48), `app/apple-icon.png` (180) — geometry source of truth is `icon.svg`/`logo.tsx`
 - [ ] Per-page metadata for Products list + individual products (dynamic OG)
 - [ ] Generate `sitemap.xml`
 - [ ] Generate `robots.txt`
