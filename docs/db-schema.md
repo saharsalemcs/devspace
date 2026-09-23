@@ -91,14 +91,14 @@ orders ── 1:N ── order_items
 
 Extends `auth.users` with application-specific user data. One-to-one relationship with Supabase Auth users.
 
-| Column       | Type          | Constraints                                                | Default      | Notes                                                |
-| ------------ | ------------- | ---------------------------------------------------------- | ------------ | ---------------------------------------------------- |
-| `id`         | `uuid`        | PRIMARY KEY, REFERENCES `auth.users(id)` ON DELETE CASCADE | —            | Mirrors auth.users.id                                |
-| `full_name`  | `text`        | —                                                          | `NULL`       | Optional, filled from profile page                   |
-| `phone`      | `text`        | —                                                          | `NULL`       | Required at checkout time (validated client-side)    |
-| `role`       | `text`        | NOT NULL, CHECK (`role IN ('customer','admin')`)           | `'customer'` | Only Admin can be set to `'admin'` (via SQL, not UI) |
-| `created_at` | `timestamptz` | NOT NULL                                                   | `now()`      | —                                                    |
-| `updated_at` | `timestamptz` | NOT NULL                                                   | `now()`      | Auto-updated via trigger                             |
+| Column       | Type          | Constraints                                                | Default      | Notes                                                                                                                               |
+| ------------ | ------------- | ---------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `id`         | `uuid`        | PRIMARY KEY, REFERENCES `auth.users(id)` ON DELETE CASCADE | —            | Mirrors auth.users.id                                                                                                               |
+| `full_name`  | `text`        | —                                                          | `NULL`       | Optional, filled from profile page                                                                                                  |
+| `phone`      | `text`        | —                                                          | `NULL`       | Required at checkout time (validated server-side in `place_order` — see [2.5](#25-checkout-snapshot-customer_name--customer_phone)) |
+| `role`       | `text`        | NOT NULL, CHECK (`role IN ('customer','admin')`)           | `'customer'` | Only Admin can be set to `'admin'` (via SQL, not UI)                                                                                |
+| `created_at` | `timestamptz` | NOT NULL                                                   | `now()`      | —                                                                                                                                   |
+| `updated_at` | `timestamptz` | NOT NULL                                                   | `now()`      | Auto-updated via trigger                                                                                                            |
 
 ---
 

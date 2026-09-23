@@ -7,6 +7,7 @@ import { getAuthErrorMessage } from "@/lib/supabase/errors";
 import { createClient } from "@/lib/supabase/server";
 import { loginSchema, type LoginInput } from "@/lib/schemas/auth";
 
+// input === { ...values, next }
 export async function signIn(input: LoginInput & { next?: string }) {
   const parsed = loginSchema.safeParse(input);
   if (!parsed.success) {

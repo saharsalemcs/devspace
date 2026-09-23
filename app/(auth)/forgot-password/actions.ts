@@ -19,7 +19,7 @@ export async function requestPasswordReset(input: ForgotPasswordInput) {
 
   const supabase = await createClient();
   await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: `${origin}/reset-password`,
+    redirectTo: `${origin}/auth/confirm?next=/reset-password&type=recovery`,
   });
 
   return { success: true };

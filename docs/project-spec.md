@@ -122,7 +122,7 @@ Deliver a fully functional online store where users can browse products, use the
 
 ### 4.2 Product Details
 
-- Image gallery (multiple images per product; `is_primary` shown first)
+- Image gallery (multiple images per product; the primary `image_url` is shown first, followed by the `images` array in order — the gallery renders `[image_url, ...images]`)
 - Name, description, price (EGP), category badge
 - "Add to Cart" action
 - Reviews section (list + posting form for logged-in users)

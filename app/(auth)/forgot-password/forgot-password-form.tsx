@@ -36,8 +36,8 @@ export function ForgotPasswordForm() {
 
   function onSubmit(values: ForgotPasswordInput) {
     startTransition(async () => {
-      await requestPasswordReset(values);
-      setSent(true);
+      const result = await requestPasswordReset(values);
+      if (!result?.error) setSent(true);
     });
   }
 

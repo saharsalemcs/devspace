@@ -27,7 +27,9 @@ export function RegisterForm() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<RegisterInput>({ resolver: zodResolver(registerSchema) });
+  } = useForm<RegisterInput>({
+    resolver: zodResolver(registerSchema),
+  });
 
   function onSubmit(values: RegisterInput) {
     setFormError(null);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -32,14 +32,22 @@ export function LoginForm() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<LoginInput>({ resolver: zodResolver(loginSchema) });
+
+  const email = watch("email");
+  const password = watch("password");
+
+  useEffect(() => {
+    setFormError(null);
+  }, [email, password]);
 
   function onSubmit(values: LoginInput) {
     setFormError(null);
     startTransition(async () => {
       const result = await signIn({ ...values, next });
-      if (result?.error) {
+      if (result.error) {
         setFormError(result.error);
       }
     });
