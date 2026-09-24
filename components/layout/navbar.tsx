@@ -1,16 +1,16 @@
 import Link from "next/link";
 import { SearchIcon, ShoppingCartIcon } from "lucide-react";
+import { Suspense } from "react";
 
 import { Container } from "@/components/layout/container";
 import { Logo } from "@/components/layout/logo";
+import { NavbarSearch } from "@/components/layout/navbar-search";
 import { UserMenu } from "@/components/layout/user-menu";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
-import { Input } from "@/components/ui/input";
 import { getProfile, getSession } from "@/lib/supabase/auth";
 
-// Layout shell — Phase 4.2 wires up real search, Phase 5.2 adds the cart
-// item-count badge.
+// Layout shell — Phase 5.2 adds the cart item-count badge.
 async function Navbar() {
   const [session, profile] = await Promise.all([getSession(), getProfile()]);
 
@@ -24,15 +24,9 @@ async function Navbar() {
           <Logo />
         </Link>
 
-        <div className="relative hidden max-w-md flex-1 sm:block">
-          <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-neutral-400" />
-          <Input
-            placeholder="Search products…"
-            disabled
-            className="pl-8"
-            aria-label="Search products"
-          />
-        </div>
+        <Suspense fallback={<NavbarSearchFallback />}>
+          <NavbarSearch />
+        </Suspense>
 
         <div className="ml-auto flex shrink-0 items-center gap-1.5">
           <IconButton
@@ -61,6 +55,15 @@ async function Navbar() {
         </div>
       </Container>
     </header>
+  );
+}
+
+function NavbarSearchFallback() {
+  return (
+    <div className="relative hidden max-w-md flex-1 sm:block">
+      <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-neutral-400" />
+      <div className="border-input h-8 w-full rounded-lg border bg-transparent" />
+    </div>
   );
 }
 
