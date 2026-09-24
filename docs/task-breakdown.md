@@ -305,7 +305,7 @@
 
 ### 3.5 Auth UI Integration
 
-- [ ] Add user menu to Navbar (avatar/name + logout when logged in, "Sign In" for guest) — `components/layout/user-menu.tsx` (base-ui `Menu`), wired into `components/layout/navbar.tsx` (now an async Server Component reading `getSession()`/`getProfile()`). Logout forces a full reload (`window.location.href`) rather than a soft redirect — Activity preserves client state across auth changes, so a soft redirect would leave stale cart/form state on screen
+- [x] Add user menu to Navbar (avatar/name + logout when logged in, "Sign In" for guest) — `components/layout/user-menu.tsx` (base-ui `Menu`), wired into `components/layout/navbar.tsx` (now an async Server Component reading `getSession()`/`getProfile()`). Logout forces a full reload (`window.location.href`) rather than a soft redirect — Activity preserves client state across auth changes, so a soft redirect would leave stale cart/form state on screen
 - [ ] Add auth-aware CTAs (e.g., "Log in to checkout" on cart, "Log in to review" on product page) — blocked on the pages themselves (`/cart` is Phase 5, product detail reviews are Phase 7); nothing to attach the CTA to yet
 
 **✅ Phase 3 Complete when:** users can register, log in, log out, reset password; protected routes redirect correctly.
@@ -316,32 +316,33 @@
 
 ### 4.1 Data Layer
 
-- [ ] Create `useProducts(filters, sort, page)` React Query hook
-- [ ] Create `useProduct(slug)` hook
-- [ ] Create `useCategories()` hook
-- [ ] Create Zod schemas for query params
-- [ ] Define a shared `staleTime` constant for product/category queries — reused by the hooks above and by every prefetch call in 4.2–4.4, so a prefetch never refires against data that's still fresh
+- [x] Create `useProducts(filters, sort, page)` React Query hook
+- [x] Create `useProduct(slug)` hook
+- [x] Create `useCategories()` hook
+- [x] Create Zod schemas for query params
+- [x] Define a shared `staleTime` constant for product/category queries — reused by the hooks above and by every prefetch call in 4.2–4.4, so a prefetch never refires against data that's still fresh
 
 ### 4.2 Product Listing Page
 
-- [ ] Build `/products` layout (sidebar filters + main grid)
-- [ ] Server-prefetch the first page of products (default filters/sort) with `queryClient.query()` in the Server Component and hydrate via `HydrationBoundary`, so the grid has data on first paint instead of a client-side loading spinner
-- [ ] Implement search bar (URL-synced via `useSearchParams`)
-- [ ] Implement category filter (multi-select checkboxes)
-- [ ] Implement price range filter (min/max inputs)
-- [ ] Implement sort dropdown (Price asc/desc, Newest, Top-rated)
-- [ ] Implement pagination controls
-- [ ] Prefetch the next page's products (`queryClient.query()` with the next page's filters/sort, guarded by the shared `staleTime`) as soon as the current page renders, so "Next" feels instant
-- [ ] Wire hover/focus prefetch on `ProductCard`'s title link (`onMouseEnter`/`onFocus` → `queryClient.query(['product', slug], ...)`) so clicking into a product usually hits a warm cache — this is shared `ProductCard` behavior, so it also covers the Home featured grid (4.3) for free
-- [ ] Empty state: "No products match your filters"
-- [ ] Loading state: skeleton grid
+- [x] Build `/products` layout (sidebar filters + main grid) — `app/(shop)/products/page.tsx` (Server Component) + `products-filters-sidebar.tsx` + `products-toolbar.tsx` + `products-grid.tsx`
+- [x] Server-prefetch the first page of products (default filters/sort) with `queryClient.query()` in the Server Component and hydrate via `HydrationBoundary`, so the grid has data on first paint instead of a client-side loading spinner — used TanStack Query's actual API, `queryClient.query()` (`queryClient.query()` isn't a real method); shared the exact query builder (`lib/queries/products.ts`) between this server prefetch and the client hook so the hydrated cache key matches on first paint
+- [x] Implement search bar (URL-synced via `useSearchParams`) — debounced input in `products-toolbar.tsx`; also wired the navbar's stub search (`components/layout/navbar-search.tsx`) as a global entry point that lands on `/products?q=...`
+- [x] Implement category filter (multi-select checkboxes) — `products-filters-sidebar.tsx`, using the new shadcn `Checkbox`; required extending the products query to embed `category:categories(id, name, slug)` so cards can show the category name
+- [x] Implement price range filter (min/max inputs) — `products-filters-sidebar.tsx`
+- [x] Implement sort dropdown (Price asc/desc, Newest, Top-rated) — `products-toolbar.tsx`
+- [x] Implement pagination controls — `products-pagination.tsx`
+- [x] Prefetch the next page's products (`queryClient.query()` with the next page's filters/sort, guarded by the shared `staleTime`) as soon as the current page renders, so "Next" feels instant — `products-grid.tsx`, via `queryClient.query()`
+- [x] Wire hover/focus prefetch on `ProductCard`'s title link (`onMouseEnter`/`onFocus` → `queryClient.query(['product', slug], ...)`) so clicking into a product usually hits a warm cache — this is shared `ProductCard` behavior, so it also covers the Home featured grid (4.3) for free — implemented with `queryClient.query()`
+- [x] Empty state: "No products match your filters"
+- [x] Loading state: skeleton grid
+- [x] Not in the original checklist, but required: `next.config.ts` had no `images.remotePatterns`, so `next/image` threw (500) on every real product image from Supabase Storage — added a pattern derived from `NEXT_PUBLIC_SUPABASE_URL`, scoped to `/storage/v1/object/public/**`
 
 ### 4.3 Home Page
 
-- [ ] Build `/` hero section with Desk Builder CTA
-- [ ] Featured products grid (top 8 by rating)
-- [ ] Server-prefetch the featured-products query with `queryClient.query()` in the Server Component and hydrate via `HydrationBoundary`
-- [ ] Category highlights section (6 category cards)
+- [x] Build `/` hero section with Desk Builder CTA — `app/(shop)/home-hero.tsx` (`text-display` headline per design-system.md, CTAs to `/desk-builder` and `/products` via the polymorphic `Button`)
+- [x] Featured products grid (top 8 by rating) — `app/(shop)/featured-products-grid.tsx` + `lib/queries/featured-products.ts` (`fetchFeaturedProducts`, `product_rating_stats!inner` ordered by `average_rating desc`, same `!inner`-drops-zero-review-products trade-off already accepted for `/products`'s `top-rated` sort in § 4.2); reuses `<ProductCard>` as-is, which also means its hover-prefetch behavior applies here for free
+- [x] Server-prefetch the featured-products query with `queryClient.query()` in the Server Component and hydrate via `HydrationBoundary` — `app/(shop)/page.tsx` (`queryClient.query()` isn't a real method, same correction already noted in § 4.2)
+- [x] Category highlights section (6 category cards) — `app/(shop)/category-highlights.tsx`, client-fetched via the existing `useCategories()` (no prefetch required per this checklist); new `icon_name` → lucide icon mapping for the 6 seeded categories, falling back to a generic icon for any unmapped name
 
 ### 4.4 Product Details Page
 

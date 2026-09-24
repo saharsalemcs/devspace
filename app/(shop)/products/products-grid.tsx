@@ -85,7 +85,7 @@ function ProductsGrid({ filters, sort, page }: ProductsGridProps) {
     <div className="flex flex-col gap-8">
       <div
         data-slot="products-grid"
-        className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"
+        className="grid grid-cols-1 gap-4 sm:grid-cols-3"
       >
         {data.products.map((product) => (
           <ProductCard
