@@ -4,9 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { CATALOG_STALE_TIME } from "@/lib/query-config";
 import { createClient } from "@/lib/supabase/client";
-import type { Database } from "@/types/database";
-
-type CategoryRow = Database["public"]["Tables"]["categories"]["Row"];
+import type { CategoryRow } from "@/types/models";
 
 export const categoriesQueryKey = ["categories"] as const;
 
