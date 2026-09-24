@@ -9,8 +9,9 @@ import { cn, formatPrice } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { fetchProduct, productQueryKey } from "@/hooks/use-product";
+import { fetchProduct, productQueryKey } from "@/lib/queries/product";
 import { CATALOG_STALE_TIME } from "@/lib/query-config";
+import { createClient } from "@/lib/supabase/client";
 
 interface ProductCardProps {
   slug: string;
@@ -47,7 +48,7 @@ function ProductCard({
     queryClient
       .query({
         queryKey: productQueryKey(slug),
-        queryFn: () => fetchProduct(slug),
+        queryFn: () => fetchProduct(createClient(), slug),
         staleTime: CATALOG_STALE_TIME,
       })
       .catch(() => {});
