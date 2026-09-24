@@ -10,14 +10,13 @@ interface IconButtonProps extends Omit<
   "size"
 > {
   size?: IconButtonSize;
-  /** Icon buttons carry no visible label — an accessible name is required. */
   "aria-label": string;
 }
 
 function IconButton({
   className,
   variant = "ghost",
-  size = "icon",
+  size = "icon-lg",
   ...props
 }: IconButtonProps) {
   return (

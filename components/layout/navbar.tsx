@@ -51,7 +51,7 @@ async function Navbar() {
           ) : (
             <Button
               variant="secondary"
-              size="sm"
+              size="lg"
               render={<Link href="/login" />}
               nativeButton={false}
             >
