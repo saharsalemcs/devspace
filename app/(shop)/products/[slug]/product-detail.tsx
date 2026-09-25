@@ -82,6 +82,10 @@ function ProductDetail({ slug }: ProductDetailProps) {
 
         <AddToCartButton
           productName={product.name}
+          productId={product.id}
+          slug={product.slug}
+          price={product.price}
+          imageUrl={product.image_url}
           className="w-full sm:w-auto"
         />
 

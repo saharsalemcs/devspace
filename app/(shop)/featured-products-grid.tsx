@@ -55,6 +55,7 @@ function FeaturedProductsGrid() {
       {data.map((product) => (
         <ProductCard
           key={product.id}
+          productId={product.id}
           slug={product.slug}
           name={product.name}
           category={product.category?.name ?? "Uncategorized"}

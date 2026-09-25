@@ -12,10 +12,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { fetchProduct, productQueryKey } from "@/lib/queries/product";
 import { CATALOG_STALE_TIME } from "@/lib/query-config";
 import { createClient } from "@/lib/supabase/client";
+import { AddToCartButton } from "@/app/(shop)/products/[slug]/add-to-cart-button";
 
 interface ProductCardProps {
   slug: string;
   name: string;
+  productId: string;
   category: string;
   price: number;
   imageUrl: string;
@@ -33,6 +35,7 @@ interface ProductCardProps {
 function ProductCard({
   slug,
   name,
+  productId,
   category,
   price,
   imageUrl,
@@ -109,16 +112,15 @@ function ProductCard({
       </div>
 
       {!hideAddToCart && (
-        <Button
-          disabled={outOfStock}
-          className={cn("mt-auto", outOfStock && "opacity-40")}
-          onClick={(e) => {
-            e.stopPropagation();
-            onAddToCart?.();
-          }}
-        >
-          Add to Cart
-        </Button>
+        <AddToCartButton
+          // disabled={outOfStock}
+          productName={name}
+          productId={productId}
+          slug={slug}
+          price={price}
+          imageUrl={imageUrl}
+          className={cn("mt-auto w-full sm:w-auto", outOfStock && "opacity-40")}
+        />
       )}
     </div>
   );
