@@ -1,16 +1,15 @@
 import Link from "next/link";
-import { SearchIcon, ShoppingCartIcon } from "lucide-react";
+import { SearchIcon } from "lucide-react";
 import { Suspense } from "react";
 
+import { CartLink } from "@/components/layout/cart-link";
 import { Container } from "@/components/layout/container";
 import { Logo } from "@/components/layout/logo";
 import { NavbarSearch } from "@/components/layout/navbar-search";
 import { UserMenu } from "@/components/layout/user-menu";
 import { Button } from "@/components/ui/button";
-import { IconButton } from "@/components/ui/icon-button";
 import { getProfile, getSession } from "@/lib/supabase/auth";
 
-// Layout shell — Phase 5.2 adds the cart item-count badge.
 async function Navbar() {
   const [session, profile] = await Promise.all([getSession(), getProfile()]);
 
@@ -29,13 +28,7 @@ async function Navbar() {
         </Suspense>
 
         <div className="ml-auto flex shrink-0 items-center gap-1.5">
-          <IconButton
-            aria-label="View cart"
-            render={<Link href="/cart" />}
-            nativeButton={false}
-          >
-            <ShoppingCartIcon />
-          </IconButton>
+          <CartLink />
 
           {session ? (
             <UserMenu
