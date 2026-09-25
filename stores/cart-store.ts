@@ -1,4 +1,4 @@
-// "use client";
+"use client";
 
 import { create } from "zustand";
 
@@ -35,6 +35,7 @@ interface CartState {
     bundleId: string | null,
     quantity: number,
   ) => void;
+  setItems: (items: CartLineItem[]) => void;
 }
 
 function isSameLine(
@@ -128,6 +129,7 @@ export const useCartStore = create<CartState>()(
             ),
           };
         }),
+      setItems: (items) => set({ items }),
     }),
     {
       name: "devspace-cart",
@@ -147,21 +149,3 @@ export function useCartSubtotal() {
     state.items.reduce((sum, item) => sum + item.price * item.quantity, 0),
   );
 }
-// interface CartState {
-
-//   /** Replaces the entire cart wholesale — used to hydrate from the DB cart after login-time merge (see § 5.3). */
-//   setItems: (items: CartLineItem[]) => void;
-// }
-
-// export const useCartStore = create<CartState>()(
-//   persist(
-//     (set) => ({
-
-//       setItems: (items) => set({ items }),
-//     }),
-//     {
-//       name: "devspace-cart",
-//       storage: createJSONStorage(() => localStorage),
-//     },
-//   ),
-// );

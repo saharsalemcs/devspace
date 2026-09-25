@@ -345,6 +345,7 @@ export type Database = {
         }[]
       }
       is_admin: { Args: never; Returns: boolean }
+      merge_cart_items: { Args: { p_items: Json }; Returns: undefined }
       place_order: {
         Args: {
           p_customer_name?: string
