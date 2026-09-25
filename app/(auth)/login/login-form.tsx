@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { loginSchema, type LoginInput } from "@/lib/schemas/auth";
 import { isSafeRedirect } from "@/lib/utils";
+import { useCartStore } from "@/stores/cart-store";
 import { signIn } from "./actions";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
@@ -46,10 +47,18 @@ export function LoginForm() {
   function onSubmit(values: LoginInput) {
     setFormError(null);
     startTransition(async () => {
-      const result = await signIn({ ...values, next });
-      if (result.error) {
+      const localCart = useCartStore.getState().items;
+      const result = await signIn({ ...values, next }, localCart);
+      if (!result.ok) {
         setFormError(result.error);
+        return;
       }
+
+      if (result.cartItems) {
+        useCartStore.getState().setItems(result.cartItems);
+      }
+
+      window.location.href = result.redirectTo;
     });
   }
 

@@ -1,27 +1,11 @@
 "use client";
 
-import {
-  Box,
-  Keyboard,
-  LampDesk,
-  Monitor,
-  Mouse,
-  Table,
-  type LucideIcon,
-} from "lucide-react";
+import { Box } from "lucide-react";
 import Link from "next/link";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCategories } from "@/hooks/use-categories";
-
-const CATEGORY_ICONS: Record<string, LucideIcon> = {
-  monitor: Monitor,
-  keyboard: Keyboard,
-  mouse: Mouse,
-  "lamp-desk": LampDesk,
-  table: Table,
-  box: Box,
-};
+import { CATEGORY_ICONS } from "@/lib/category-icons";
 
 function CategoryHighlights() {
   const { data, isPending, isError } = useCategories();

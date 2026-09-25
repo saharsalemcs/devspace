@@ -25,6 +25,8 @@ interface ProductCardProps {
   selected?: boolean;
   onSelect?: () => void;
   onAddToCart?: () => void;
+  /** Desk Builder slot picker: the card itself is the "pick this" action. */
+  hideAddToCart?: boolean;
   className?: string;
 }
 
@@ -39,6 +41,7 @@ function ProductCard({
   selected = false,
   onSelect,
   onAddToCart,
+  hideAddToCart = false,
   className,
 }: ProductCardProps) {
   const outOfStock = !inStock;
@@ -105,16 +108,18 @@ function ProductCard({
         <p className="text-price text-accent font-mono">{formatPrice(price)}</p>
       </div>
 
-      <Button
-        disabled={outOfStock}
-        className={cn("mt-auto", outOfStock && "opacity-40")}
-        onClick={(e) => {
-          e.stopPropagation();
-          onAddToCart?.();
-        }}
-      >
-        Add to Cart
-      </Button>
+      {!hideAddToCart && (
+        <Button
+          disabled={outOfStock}
+          className={cn("mt-auto", outOfStock && "opacity-40")}
+          onClick={(e) => {
+            e.stopPropagation();
+            onAddToCart?.();
+          }}
+        >
+          Add to Cart
+        </Button>
+      )}
     </div>
   );
 }
