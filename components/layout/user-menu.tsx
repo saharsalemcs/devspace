@@ -8,6 +8,7 @@ import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/supabase/auth-actions";
+import { useCartStore } from "@/stores/cart-store";
 
 interface UserMenuProps {
   fullName: string | null;
@@ -30,6 +31,7 @@ function UserMenu({ fullName, email }: UserMenuProps) {
         return;
       }
 
+      useCartStore.getState().clearCart();
       window.location.href = "/";
     });
   }

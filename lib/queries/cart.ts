@@ -39,7 +39,9 @@ export async function fetchDbCart(
 ): Promise<CartLineItem[]> {
   const { data, error } = await supabase
     .from("cart_items")
-    .select("quantity, bundle_id, product:products(id, name, slug, price, image_url)")
+    .select(
+      "quantity, bundle_id, product:products(id, name, slug, price, image_url)",
+    )
     .order("created_at", { ascending: true });
 
   if (error) throw error;
@@ -55,4 +57,53 @@ export async function fetchDbCart(
       quantity: row.quantity,
       bundleId: row.bundle_id,
     }));
+}
+
+export async function deleteCartItem(
+  supabase: SupabaseClient<Database>,
+  productId: string,
+  bundleId: string | null,
+) {
+  let query = supabase.from("cart_items").delete().eq("product_id", productId);
+  query =
+    bundleId === null
+      ? query.is("bundle_id", null)
+      : query.eq("bundle_id", bundleId);
+
+  const { error } = await query;
+  if (error) throw error;
+}
+
+export async function updateCartItemQuantity(
+  supabase: SupabaseClient<Database>,
+  productId: string,
+  bundleId: string | null,
+  quantity: number,
+) {
+  if (quantity <= 0) {
+    return deleteCartItem(supabase, productId, bundleId);
+  }
+
+  let query = supabase
+    .from("cart_items")
+    .update({ quantity })
+    .eq("product_id", productId);
+  query =
+    bundleId === null
+      ? query.is("bundle_id", null)
+      : query.eq("bundle_id", bundleId);
+
+  const { error } = await query;
+  if (error) throw error;
+}
+
+export async function deleteCartBundle(
+  supabase: SupabaseClient<Database>,
+  bundleId: string,
+) {
+  const { error } = await supabase
+    .from("cart_items")
+    .delete()
+    .eq("bundle_id", bundleId);
+  if (error) throw error;
 }

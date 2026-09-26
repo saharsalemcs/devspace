@@ -1,6 +1,14 @@
 "use client";
 
+import { toast } from "sonner";
+
 import { calculateCartTotals, groupCartItems } from "@/lib/cart";
+import {
+  deleteCartBundle,
+  deleteCartItem,
+  updateCartItemQuantity,
+} from "@/lib/queries/cart";
+import { createClient } from "@/lib/supabase/client";
 import { useCartStore } from "@/stores/cart-store";
 import { CartBundleGroup } from "./cart-bundle-group";
 import { CartEmptyState } from "./cart-empty-state";
@@ -12,6 +20,45 @@ function CartView({ isLoggedIn }: { isLoggedIn: boolean }) {
   const removeItem = useCartStore((state) => state.removeItem);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeBundle = useCartStore((state) => state.removeBundle);
+
+  function handleRemoveItem(productId: string, bundleId: string | null) {
+    removeItem(productId, bundleId);
+
+    if (isLoggedIn) {
+      deleteCartItem(createClient(), productId, bundleId).catch(() => {
+        toast.error("Couldn't sync cart. Please refresh the page.");
+      });
+    }
+  }
+
+  function handleQuantityChange(
+    productId: string,
+    bundleId: string | null,
+    quantity: number,
+  ) {
+    updateQuantity(productId, bundleId, quantity);
+
+    if (isLoggedIn) {
+      updateCartItemQuantity(
+        createClient(),
+        productId,
+        bundleId,
+        quantity,
+      ).catch(() => {
+        toast.error("Couldn't sync cart. Please refresh the page.");
+      });
+    }
+  }
+
+  function handleRemoveBundle(bundleId: string) {
+    removeBundle(bundleId);
+
+    if (isLoggedIn) {
+      deleteCartBundle(createClient(), bundleId).catch(() => {
+        toast.error("Couldn't sync cart. Please refresh the page.");
+      });
+    }
+  }
 
   if (items.length === 0) {
     return <CartEmptyState />;
@@ -33,9 +80,9 @@ function CartView({ isLoggedIn }: { isLoggedIn: boolean }) {
                 key={item.productId}
                 item={item}
                 onQuantityChange={(quantity) =>
-                  updateQuantity(item.productId, null, quantity)
+                  handleQuantityChange(item.productId, null, quantity)
                 }
-                onRemove={() => removeItem(item.productId, null)}
+                onRemove={() => handleRemoveItem(item.productId, null)}
               />
             ))}
           </div>
@@ -46,10 +93,12 @@ function CartView({ isLoggedIn }: { isLoggedIn: boolean }) {
             key={bundle.bundleId}
             bundle={bundle}
             onQuantityChange={(productId, quantity) =>
-              updateQuantity(productId, bundle.bundleId, quantity)
+              handleQuantityChange(productId, bundle.bundleId, quantity)
             }
-            onRemoveItem={(productId) => removeItem(productId, bundle.bundleId)}
-            onRemoveBundle={() => removeBundle(bundle.bundleId)}
+            onRemoveItem={(productId) =>
+              handleRemoveItem(productId, bundle.bundleId)
+            }
+            onRemoveBundle={() => handleRemoveBundle(bundle.bundleId)}
           />
         ))}
       </div>
