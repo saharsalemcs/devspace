@@ -19,39 +19,37 @@ function CartSummary({ totals, isLoggedIn }: CartSummaryProps) {
       data-slot="cart-summary"
       className="bg-surface sticky top-24 flex h-fit flex-col gap-4 rounded-xl border border-neutral-700 p-6"
     >
-      <h2 className="text-h3 text-foreground font-semibold">Order Summary</h2>
+      <h2 className="text-h4 text-foreground font-semibold">Order Summary</h2>
 
       <div className="flex flex-col gap-2">
         <div className="text-body flex justify-between text-neutral-300">
           <span>Subtotal</span>
-          <span className="font-mono">{formatPrice(totals.subtotal)}</span>
+          <span>{formatPrice(totals.subtotal)}</span>
         </div>
 
         {totals.discount > 0 && (
           <div className="text-body text-accent flex justify-between">
             <span>Bundle Discount</span>
-            <span className="font-mono">-{formatPrice(totals.discount)}</span>
+            <span>-{formatPrice(totals.discount)}</span>
           </div>
         )}
       </div>
 
       <Separator />
 
-      <div className="text-h4 flex justify-between text-foreground">
+      <div className="text-h4 text-foreground flex justify-between">
         <span>Total</span>
-        <span className="text-price-lg text-accent font-mono">
-          {formatPrice(totals.total)}
-        </span>
+        <span className="text-accent text-xl">{formatPrice(totals.total)}</span>
       </div>
 
       <Button
         size="lg"
-        className="w-full"
+        className="group w-full"
         render={<Link href={checkoutHref} />}
         nativeButton={false}
       >
         Proceed to Checkout
-        <ArrowRightIcon />
+        <ArrowRightIcon className="transition-transform duration-200 group-hover:translate-x-1" />
       </Button>
 
       {!isLoggedIn && (

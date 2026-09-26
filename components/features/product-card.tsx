@@ -104,11 +104,11 @@ function ProductCard({
           onClick={(e) => e.stopPropagation()}
           onMouseEnter={prefetchProduct}
           onFocus={prefetchProduct}
-          className="text-h4 text-foreground hover:text-primary"
+          className="text-foreground hover:text-primary text-xl"
         >
           {name}
         </Link>
-        <p className="text-price text-accent font-mono">{formatPrice(price)}</p>
+        <p className="text-accent">{formatPrice(price)}</p>
       </div>
 
       {!hideAddToCart && (

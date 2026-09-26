@@ -55,7 +55,7 @@ function ProductDetail({ slug }: ProductDetailProps) {
             </Badge>
           )}
 
-          <h1 className="text-h1 text-foreground font-bold">{product.name}</h1>
+          <h1 className="text-h2 text-foreground font-bold">{product.name}</h1>
 
           {reviewCount > 0 ? (
             <div className="flex items-center gap-2">
@@ -69,9 +69,7 @@ function ProductDetail({ slug }: ProductDetailProps) {
             <p className="text-body-sm text-neutral-400">No reviews yet</p>
           )}
 
-          <p className="text-price-lg text-accent font-mono">
-            {formatPrice(product.price)}
-          </p>
+          <p className="text-price text-accent">{formatPrice(product.price)}</p>
         </div>
 
         {product.description && (
@@ -98,7 +96,7 @@ function ProductDetail({ slug }: ProductDetailProps) {
               {specs.map(([key, value]) => (
                 <div
                   key={key}
-                  className="text-body-sm flex items-baseline justify-between gap-2 border-b border-neutral-800 py-1.5 font-mono"
+                  className="text-body flex items-baseline justify-between gap-2 border-b border-neutral-800 py-1.5"
                 >
                   <dt className="text-neutral-400">{key}</dt>
                   <dd className="text-foreground text-right">

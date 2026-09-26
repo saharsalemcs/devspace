@@ -56,19 +56,19 @@ function CartBundleGroup({
       <div className="flex flex-col gap-1 border-t border-neutral-800 pt-3">
         <div className="text-body-sm flex justify-between text-neutral-400">
           <span>Bundle Subtotal</span>
-          <span className="font-mono">{formatPrice(bundle.subtotal)}</span>
+          <span>{formatPrice(bundle.subtotal)}</span>
         </div>
 
         {bundle.discount > 0 && (
           <div className="text-body-sm text-accent flex justify-between">
             <span>Bundle Discount (5%)</span>
-            <span className="font-mono">-{formatPrice(bundle.discount)}</span>
+            <span className="text-body">-{formatPrice(bundle.discount)}</span>
           </div>
         )}
 
-        <div className="text-body flex justify-between font-semibold text-foreground">
+        <div className="text-body text-foreground flex justify-between font-semibold">
           <span>Bundle Total</span>
-          <span className="font-mono">{formatPrice(bundle.total)}</span>
+          <span>{formatPrice(bundle.total)}</span>
         </div>
       </div>
     </div>

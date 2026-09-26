@@ -19,7 +19,7 @@ function CartItemRow({ item, onQuantityChange, onRemove }: CartItemRowProps) {
   return (
     <div
       data-slot="cart-item-row"
-      className="flex items-center gap-4 border-b border-neutral-800 py-4 last:border-b-0"
+      className="flex items-start gap-3 border-b border-neutral-800 py-4 last:border-b-0 sm:items-center sm:gap-4"
     >
       <div className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-neutral-800">
         <Image
@@ -31,25 +31,36 @@ function CartItemRow({ item, onQuantityChange, onRemove }: CartItemRowProps) {
         />
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <Link
-          href={`/products/${item.slug}`}
-          className="text-h4 text-foreground hover:text-primary truncate"
-        >
-          {item.name}
-        </Link>
-        <p className="text-price text-accent font-mono">
-          {formatPrice(item.price)}
-        </p>
+      <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <Link
+            href={`/products/${item.slug}`}
+            className="text-h4 text-foreground hover:text-primary truncate"
+          >
+            {item.name}
+          </Link>
+          <p className="text-accent text-base sm:text-lg">
+            {formatPrice(item.price)}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <QuantityStepper
+            quantity={item.quantity}
+            onChange={onQuantityChange}
+          />
+        </div>
       </div>
 
-      <QuantityStepper quantity={item.quantity} onChange={onQuantityChange} />
-
-      <p className="text-price hidden w-24 text-right font-mono text-foreground sm:block">
+      <p className="text-foreground hidden text-right sm:block">
         {formatPrice(item.price * item.quantity)}
       </p>
 
-      <IconButton aria-label={`Remove ${item.name} from cart`} onClick={onRemove}>
+      <IconButton
+        aria-label={`Remove ${item.name} from cart`}
+        onClick={onRemove}
+        className="shrink-0"
+      >
         <XIcon />
       </IconButton>
     </div>
