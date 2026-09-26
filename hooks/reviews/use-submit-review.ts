@@ -1,10 +1,16 @@
+"use client";
+
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 import {
-  reviewsQueryKey,
   submitReview,
-  SubmitReviewInput,
+  reviewsQueryKey,
+  type SubmitReviewInput,
 } from "@/lib/queries/reviews";
 import { createClient } from "@/lib/supabase/client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+export { DuplicateReviewError } from "@/lib/queries/reviews";
+export type { SubmitReviewInput };
 
 export function useSubmitReview() {
   const queryClient = useQueryClient();
@@ -15,6 +21,7 @@ export function useSubmitReview() {
 
       const { data: userData, error: userError } =
         await supabase.auth.getUser();
+
       if (userError || !userData.user) {
         throw new Error("You must be logged in to submit a review.");
       }
