@@ -96,6 +96,8 @@ function ProductsGrid({ filters, sort, page }: ProductsGridProps) {
             category={product.category?.name ?? "Uncategorized"}
             price={product.price}
             imageUrl={product.image_url}
+            averageRating={product.average_rating}
+            reviewCount={product.review_count}
           />
         ))}
       </div>

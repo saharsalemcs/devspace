@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RatingStars } from "@/components/features/rating-stars";
+import { ReviewsSection } from "@/components/features/reviews/reviews-section";
 import { useProduct } from "@/hooks/use-product";
 import { formatPrice } from "@/lib/utils";
 import { AddToCartButton } from "./add-to-cart-button";
@@ -41,73 +42,81 @@ function ProductDetail({ slug }: ProductDetailProps) {
   const reviewCount = product.review_count ?? 0;
 
   return (
-    <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
-      <ProductGallery
-        images={[product.image_url, ...product.images]}
-        alt={product.name}
-      />
-
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-2">
-          {product.category && (
-            <Badge variant="neutral" className="w-fit">
-              {product.category.name}
-            </Badge>
-          )}
-
-          <h1 className="text-h2 text-foreground font-bold">{product.name}</h1>
-
-          {reviewCount > 0 ? (
-            <div className="flex items-center gap-2">
-              <RatingStars rating={product.average_rating ?? 0} />
-              <span className="text-body-sm text-neutral-400">
-                {(product.average_rating ?? 0).toFixed(1)} · {reviewCount}{" "}
-                {reviewCount === 1 ? "review" : "reviews"}
-              </span>
-            </div>
-          ) : (
-            <p className="text-body-sm text-neutral-400">No reviews yet</p>
-          )}
-
-          <p className="text-price text-accent">{formatPrice(product.price)}</p>
-        </div>
-
-        {product.description && (
-          <p className="text-body whitespace-pre-line text-neutral-300">
-            {product.description}
-          </p>
-        )}
-
-        <AddToCartButton
-          productName={product.name}
-          productId={product.id}
-          slug={product.slug}
-          price={product.price}
-          imageUrl={product.image_url}
-          className="w-full sm:w-auto"
+    <div className="flex flex-col gap-10">
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
+        <ProductGallery
+          images={[product.image_url, ...product.images]}
+          alt={product.name}
         />
 
-        {specs.length > 0 && (
-          <div className="flex flex-col gap-3 border-t border-neutral-700 pt-6">
-            <h2 className="text-h4 text-foreground font-semibold">
-              Specifications
-            </h2>
-            <dl className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
-              {specs.map(([key, value]) => (
-                <div
-                  key={key}
-                  className="text-body flex items-baseline justify-between gap-2 border-b border-neutral-800 py-1.5"
-                >
-                  <dt className="text-neutral-400">{key}</dt>
-                  <dd className="text-foreground text-right">
-                    {String(value)}
-                  </dd>
-                </div>
-              ))}
-            </dl>
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-2">
+            {product.category && (
+              <Badge variant="neutral" className="w-fit">
+                {product.category.name}
+              </Badge>
+            )}
+
+            <h1 className="text-h2 text-foreground font-bold">
+              {product.name}
+            </h1>
+
+            {reviewCount > 0 ? (
+              <div className="flex items-center gap-2">
+                <RatingStars rating={product.average_rating ?? 0} />
+                <span className="text-body-sm text-neutral-400">
+                  {(product.average_rating ?? 0).toFixed(1)} · {reviewCount}{" "}
+                  {reviewCount === 1 ? "review" : "reviews"}
+                </span>
+              </div>
+            ) : (
+              <p className="text-body-sm text-neutral-400">No reviews yet</p>
+            )}
+
+            <p className="text-price text-accent">
+              {formatPrice(product.price)}
+            </p>
           </div>
-        )}
+
+          {product.description && (
+            <p className="text-body whitespace-pre-line text-neutral-300">
+              {product.description}
+            </p>
+          )}
+
+          <AddToCartButton
+            productName={product.name}
+            productId={product.id}
+            slug={product.slug}
+            price={product.price}
+            imageUrl={product.image_url}
+            className="w-full sm:w-auto"
+          />
+
+          {specs.length > 0 && (
+            <div className="flex flex-col gap-3 border-t border-neutral-700 pt-6">
+              <h2 className="text-h4 text-foreground font-semibold">
+                Specifications
+              </h2>
+              <dl className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
+                {specs.map(([key, value]) => (
+                  <div
+                    key={key}
+                    className="text-body flex items-baseline justify-between gap-2 border-b border-neutral-800 py-1.5"
+                  >
+                    <dt className="text-neutral-400">{key}</dt>
+                    <dd className="text-foreground text-right">
+                      {String(value)}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          )}
+        </div>
       </div>
+
+      <ReviewsSection productId={product.id} />
     </div>
   );
 }

@@ -106,6 +106,8 @@ function SlotPickerModal({
                   price={product.price}
                   imageUrl={product.image_url}
                   selected={selection?.productId === product.id}
+                  averageRating={product.average_rating}
+                  reviewCount={product.review_count}
                   hideAddToCart
                   onSelect={() => handleSelect(product)}
                 />

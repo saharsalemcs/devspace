@@ -7,12 +7,12 @@ import { CheckIcon } from "lucide-react";
 
 import { cn, formatPrice } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchProduct, productQueryKey } from "@/lib/queries/product";
 import { CATALOG_STALE_TIME } from "@/lib/query-config";
 import { createClient } from "@/lib/supabase/client";
 import { AddToCartButton } from "@/app/(shop)/products/[slug]/add-to-cart-button";
+import { RatingStars } from "./rating-stars";
 
 interface ProductCardProps {
   slug: string;
@@ -23,7 +23,9 @@ interface ProductCardProps {
   imageUrl: string;
   imageAlt?: string;
   inStock?: boolean;
-  /** Desk Builder selected state — design-system.md § 3.2 */
+  averageRating?: number | null;
+  reviewCount?: number | null;
+
   selected?: boolean;
   onSelect?: () => void;
   onAddToCart?: () => void;
@@ -38,12 +40,13 @@ function ProductCard({
   productId,
   category,
   price,
+  averageRating,
+  reviewCount,
   imageUrl,
   imageAlt = name,
   inStock = true,
   selected = false,
   onSelect,
-  onAddToCart,
   hideAddToCart = false,
   className,
 }: ProductCardProps) {
@@ -108,6 +111,16 @@ function ProductCard({
         >
           {name}
         </Link>
+
+        {reviewCount ? (
+          <div className="flex items-center gap-1.5">
+            <RatingStars rating={averageRating ?? 0} size="sm" />
+            <span className="text-caption text-neutral-400">
+              ({reviewCount})
+            </span>
+          </div>
+        ) : null}
+
         <p className="text-accent">{formatPrice(price)}</p>
       </div>
 
