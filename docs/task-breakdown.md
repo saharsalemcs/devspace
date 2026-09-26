@@ -346,14 +346,14 @@
 
 ### 4.4 Product Details Page
 
-- [ ] Build `/products/[slug]` layout (gallery left, info right)
-- [ ] Server-prefetch `useProduct(slug)`'s query with `queryClient.query()` in the Server Component and hydrate via `HydrationBoundary`, so the gallery/info render with data on first paint
-- [ ] Build image gallery component (main image + thumbnail strip)
-- [ ] Display name, price, category badge, description
-- [ ] Display specs table (from `specs` jsonb)
-- [ ] Add-to-cart button (fires success toast)
-- [ ] Show average rating + review count (from `product_rating_stats` view)
-- [ ] 404 if slug not found
+- [x] Build `/products/[slug]` layout (gallery left, info right) — `app/(shop)/products/[slug]/page.tsx` (Server Component) + `product-detail.tsx`
+- [x] Server-prefetch `useProduct(slug)`'s query with `queryClient.query()` in the Server Component and hydrate via `HydrationBoundary`, so the gallery/info render with data on first paint — extracted the shared query builder into `lib/queries/product.ts` (`fetchProduct(supabase, slug)` + `productQueryKey`), same split already used for `products`/`featured-products`, so the server prefetch and the client hook share one cache key; `hooks/use-product.ts` and `ProductCard`'s hover-prefetch were updated to the new shared builder
+- [x] Build image gallery component (main image + thumbnail strip) — `product-gallery.tsx`, renders `[image_url, ...images]` per db-schema.md § 2.1
+- [x] Display name, price, category badge, description — `product-detail.tsx`
+- [x] Display specs table (from `specs` jsonb) — `product-detail.tsx`, guards against non-object `specs` values
+- [x] Add-to-cart button (fires success toast) — `add-to-cart-button.tsx`; no cart store yet (Phase 5), so this just fires the toast for now
+- [x] Show average rating + review count (from `product_rating_stats` view) — `components/features/rating-stars.tsx` (new, reusable for Phase 7) + "No reviews yet" fallback
+- [x] 404 if slug not found — `notFound()` in the Server Component when `fetchProduct` resolves `null`
 
 **✅ Phase 4 Complete when:** users can browse, search, filter, sort products, and view detail pages.
 
@@ -363,31 +363,31 @@
 
 ### 5.1 Zustand Cart Store
 
-- [ ] Create `useCartStore` (items array, itemCount + subtotal getters)
-- [ ] Add `addItem`, `removeItem`, `updateQuantity`, `clearCart` actions
-- [ ] Add `addBundle(items, bundle_id)` action
-- [ ] Add `removeBundle(bundle_id)` action
-- [ ] Persist to localStorage via Zustand `persist` proxy
+- [x] Create `useCartStore` (items array, itemCount + subtotal getters) — `stores/cart-store.ts`; `itemCount`/`subtotal` are exposed as separate selector hooks (`useCartItemCount`, `useCartSubtotal`) rather than stored derived fields, so they can't drift out of sync with `items`
+- [x] Add `addItem`, `removeItem`, `updateQuantity`, `clearCart` actions — line identity follows the `cart_items` UNIQUE (`product_id`, `bundle_id`) constraint from db-schema.md § 4 (minus `user_id`, which the guest store has no notion of), so `addItem` on an existing standalone product merges quantity instead of duplicating the line, and `updateQuantity(productId, bundleId, 0)` removes the line
+- [x] Add `addBundle(items, bundle_id)` action — adds every product as its own line (qty 1) sharing the passed-in `bundle_id`, matching the "separate row per bundle component" rule from db-schema.md § 2.2
+- [x] Add `removeBundle(bundle_id)` action
+- [x] Persist to localStorage via Zustand `persist` proxy — `zustand/middleware`'s `persist` + `createJSONStorage(() => localStorage)`
 
 ### 5.2 Cart UI
 
-- [ ] Cart icon in Navbar with item-count badge
-- [ ] Build `/cart` page layout
-- [ ] Render standalone items list
-- [ ] Render bundle groups (with "Desk Build" header + subtotal)
-- [ ] Quantity stepper per item
-- [ ] Remove item button
-- [ ] Remove entire bundle button
-- [ ] Order summary card (subtotal, discount, total)
-- [ ] "Proceed to Checkout" CTA (redirects to `/login?next=/checkout` if guest)
-- [ ] Empty cart state with "Continue Shopping" CTA
+- [x] Cart icon in Navbar with item-count badge — `components/layout/cart-link.tsx` (client, reads `useCartItemCount`), swapped in for the old static icon in `navbar.tsx`
+- [x] Build `/cart` page layout — `app/(shop)/cart/page.tsx` (Server Component, reads `getSession()` for the checkout CTA) + `cart-view.tsx` (client, reads `useCartStore`)
+- [x] Render standalone items list — `cart-item-row.tsx`
+- [x] Render bundle groups (with "Desk Build" header + subtotal) — `cart-bundle-group.tsx`; grouping/discount math extracted to `lib/cart.ts` (`groupCartItems`, `calculateCartTotals`) so the 5% bundle-discount display rule (design-system.md § 3.4.1 / db-schema.md § 3.3) stays in one place, shared by the bundle card footer and the order summary
+- [x] Quantity stepper per item — `quantity-stepper.tsx`; decrementing to 0 removes the line (already handled by `updateQuantity` in the store)
+- [x] Remove item button — per-row in `cart-item-row.tsx`, works for both standalone and in-bundle lines
+- [x] Remove entire bundle button — `cart-bundle-group.tsx` header, calls `removeBundle`
+- [x] Order summary card (subtotal, discount, total) — `cart-summary.tsx`
+- [x] "Proceed to Checkout" CTA (redirects to `/login?next=/checkout` if guest) — `cart-summary.tsx`, href picked server-side from the `isLoggedIn` prop passed down from `page.tsx`
+- [x] Empty cart state with "Continue Shopping" CTA — `cart-empty-state.tsx`
 
 ### 5.3 Login-Time Cart Merge
 
-- [ ] After successful login, read localStorage cart → upsert into `cart_items`
-- [ ] Clear localStorage cart after successful merge
-- [ ] Fetch DB cart into Zustand store for logged-in users
-- [ ] Handle merge conflicts (sum quantities on same `product_id` + `bundle_id`)
+- [x] After successful login, read localStorage cart → upsert into `cart_items` — `app/(auth)/login/login-form.tsx` reads `useCartStore.getState().items` and passes it to the `signIn` server action, which calls `mergeCartItems()` (`lib/queries/cart.ts`) before returning
+- [x] Clear localStorage cart after successful merge — not a separate step: `setItems()` (new `useCartStore` action) replaces the store's `items` wholesale with the merged DB cart, and the `persist` middleware overwrites localStorage with that same value on the next tick
+- [x] Fetch DB cart into Zustand store for logged-in users — `fetchDbCart()` (`lib/queries/cart.ts`) joins `cart_items` with `products` (for `name`/`slug`/`price`/`image_url`, which `cart_items` itself doesn't store) and the form calls `setItems(result.cartItems)` with it
+- [x] Handle merge conflicts (sum quantities on same `product_id` + `bundle_id`) — not a plain `.upsert()`: `cart_items` has two *partial* unique indexes (one for `bundle_id IS NULL`, one for `bundle_id IS NOT NULL` — see db-schema.md § 4), which a single `ON CONFLICT (user_id, product_id, bundle_id)` target can't match. Added RPC `merge_cart_items(p_items jsonb)` (`supabase/migrations/007_merge_cart_items.sql`) that picks the correct conflict target per row and sums `quantity` on conflict — `signIn` no longer calls `redirect()` itself (unlike the other auth actions) since the client needs the merged cart back first; it returns `{ ok, cartItems, redirectTo }` and the form does `window.location.href = redirectTo` (a full reload, same reasoning as `signOut` in `user-menu.tsx`, so the Navbar and any cached routes don't show stale guest-session state). A merge/fetch failure doesn't block login — it's caught server-side and the client leaves the local cart untouched, to retry on the next login.
 
 **✅ Phase 5 Complete when:** guests can add/edit cart in localStorage, and cart merges to DB on login.
 
@@ -397,36 +397,36 @@
 
 ### 6.1 Data Layer
 
-- [ ] Fetch builder slots (categories where `is_builder_slot = true`)
-- [ ] Fetch products per category on demand (lazy per slot)
-- [ ] Create `useCalculateBundle(product_ids)` hook (calls `calculate_bundle_total` RPC)
+- [x] Fetch builder slots (categories where `is_builder_slot = true`) — `hooks/use-builder-slots.ts`, a thin filter over the already-cached `useCategories()` query rather than a second fetch
+- [x] Fetch products per category on demand (lazy per slot) — `slot-picker-modal.tsx` queries `productsQueryKey`/`fetchProducts` (same builder the `/products` page uses) with `enabled: open`, so nothing fetches until that slot's picker is actually opened; also means a warm `/products?category=X` cache is reused for free
+- [x] Create `useCalculateBundle(product_ids)` hook (calls `calculate_bundle_total` RPC) — `hooks/use-calculate-bundle.ts` + `lib/queries/bundle.ts` (`fetchBundleTotal`)
 
 ### 6.2 Desk Builder Page
 
-- [ ] Build `/desk-builder` layout (slots grid on left, live summary on right)
-- [ ] Render one Slot card per builder-slot category
-- [ ] Empty slot state (icon + "Choose a [category]" CTA)
-- [ ] Slot picker modal (opens product grid for that category)
-- [ ] Selected state (mini product card with change/remove buttons)
+- [x] Build `/desk-builder` layout (slots grid on left, live summary on right) — `app/(shop)/desk-builder/page.tsx` + `desk-builder-view.tsx`
+- [x] Render one Slot card per builder-slot category — `builder-slot-card.tsx`
+- [x] Empty slot state (icon + "Choose a [category]" CTA) — reuses the `icon_name` → lucide mapping, extracted from `category-highlights.tsx` into shared `lib/category-icons.ts` so both places stay in sync
+- [x] Slot picker modal (opens product grid for that category) — `slot-picker-modal.tsx`; reuses `<ProductCard selected onSelect>` (already had Desk Builder props from Phase 1/4 that nothing was calling yet) — added a `hideAddToCart` prop so the picker's grid cards don't show a dead "Add to Cart" button, since the whole card is the "pick this" action here
+- [x] Selected state (mini product card with change/remove buttons) — `builder-slot-card.tsx`'s filled-slot branch (design-system.md § 3.2 selected border + corner check badge)
 
 ### 6.3 Live Summary Panel
 
-- [ ] List selected components
-- [ ] Show subtotal (from RPC — never client-computed)
-- [ ] Show "Bundle Discount (5%)" line when 3+ items
-- [ ] Show grand total in `text-price-lg text-accent`
-- [ ] Debounce RPC calls on selection changes (300ms)
+- [x] List selected components — `live-summary-panel.tsx`
+- [x] Show subtotal (from RPC — never client-computed) — `useCalculateBundle`; the only client-side shortcut is skipping the RPC call entirely when 0 items are selected (trivially 0, nothing to price)
+- [x] Show "Bundle Discount (5%)" line when 3+ items — with the § 3.5 "Discount hint" tooltip on hover
+- [x] Show grand total in `text-price-lg text-accent` — matches `cart-summary.tsx`'s existing total styling
+- [x] Debounce RPC calls on selection changes (300ms) — `useCalculateBundle` debounces the product-ID list before it becomes the query key, `placeholderData: keepPreviousData` avoids a flash back to stale totals mid-debounce
 
 ### 6.4 Add to Cart Flow
 
-- [ ] "Add Bundle to Cart" button (disabled if 0 items)
-- [ ] Open confirmation modal on click
-- [ ] Modal shows final bundle summary
-- [ ] On confirm: generate `bundle_id` via `crypto.randomUUID()`
-- [ ] Add all items to cart with shared `bundle_id`
-- [ ] Clear Desk Builder state
-- [ ] Toast: "Your build was added to cart"
-- [ ] Redirect to `/cart` (or offer "Keep Shopping")
+- [x] "Add Bundle to Cart" button (disabled if 0 items) — `live-summary-panel.tsx`
+- [x] Open confirmation modal on click — `confirm-build-modal.tsx`
+- [x] Modal shows final bundle summary — design-system.md § 3.4.1 layout (thumbnails, subtotal, discount, grand total)
+- [x] On confirm: generate `bundle_id` via `crypto.randomUUID()`
+- [x] Add all items to cart with shared `bundle_id` — `useCartStore.addBundle()` (already built in Phase 5 for this exact flow)
+- [x] Clear Desk Builder state — `useDeskBuilderStore.reset()`
+- [x] Toast: "Your build was added to cart"
+- [x] Redirect to `/cart` (or offer "Keep Shopping") — redirects to `/cart`; navbar/footer nav links (`Products`, `Desk Builder`) remain the way back to shopping from there, same as after any other add-to-cart
 
 **✅ Phase 6 Complete when:** users can assemble a build, see live server-verified pricing, and add it to cart as a grouped bundle.
 
