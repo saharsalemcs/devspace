@@ -121,7 +121,7 @@ function ProductCard({
           </div>
         ) : null}
 
-        <p className="text-accent">{formatPrice(price)}</p>
+        <p className="text-accent font-mono">{formatPrice(price)}</p>
       </div>
 
       {!hideAddToCart && (

@@ -61,7 +61,7 @@ function BuilderSlotCard({ category }: BuilderSlotCardProps) {
               <p className="text-body-sm text-foreground truncate">
                 {selection.name}
               </p>
-              <p className="text-accent mt-0.5">
+              <p className="text-accent mt-0.5 font-mono">
                 {formatPrice(selection.price)}
               </p>
             </div>

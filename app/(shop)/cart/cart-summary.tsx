@@ -24,13 +24,13 @@ function CartSummary({ totals, isLoggedIn }: CartSummaryProps) {
       <div className="flex flex-col gap-2">
         <div className="text-body flex justify-between text-neutral-300">
           <span>Subtotal</span>
-          <span>{formatPrice(totals.subtotal)}</span>
+          <span className="font-mono">{formatPrice(totals.subtotal)}</span>
         </div>
 
         {totals.discount > 0 && (
           <div className="text-body text-accent flex justify-between">
             <span>Bundle Discount</span>
-            <span>-{formatPrice(totals.discount)}</span>
+            <span className="font-mono">-{formatPrice(totals.discount)}</span>
           </div>
         )}
       </div>
@@ -39,7 +39,9 @@ function CartSummary({ totals, isLoggedIn }: CartSummaryProps) {
 
       <div className="text-h4 text-foreground flex justify-between">
         <span>Total</span>
-        <span className="text-accent text-xl">{formatPrice(totals.total)}</span>
+        <span className="text-price text-accent font-mono">
+          {formatPrice(totals.total)}
+        </span>
       </div>
 
       <Button

@@ -25,6 +25,10 @@ export interface CartLineItem {
 
 interface CartState {
   items: CartLineItem[];
+  /** False until the persisted cart has been read from localStorage on the
+   *  client. Lets UI that renders on both server and client (e.g. the
+   *  Navbar cart badge) avoid a flash of "0 items" before hydration. */
+  hasHydrated: boolean;
   addItem: (product: CartProductInput, quantity?: number) => void;
   removeItem: (productId: string, bundleId?: string | null) => void;
   clearCart: () => void;
@@ -50,6 +54,7 @@ export const useCartStore = create<CartState>()(
   persist(
     (set) => ({
       items: [],
+      hasHydrated: false,
       addItem: (product, quantity = 1) =>
         set((state) => {
           const existing = state.items.find((item) =>
@@ -134,14 +139,20 @@ export const useCartStore = create<CartState>()(
     {
       name: "devspace-cart",
       storage: createJSONStorage(() => localStorage),
+      onRehydrateStorage: () => (state) => {
+        if (state) state.hasHydrated = true;
+      },
     },
   ),
 );
 
 export function useCartItemCount() {
-  return useCartStore((state) =>
+  const hasHydrated = useCartStore((state) => state.hasHydrated);
+  const count = useCartStore((state) =>
     state.items.reduce((sum, item) => sum + item.quantity, 0),
   );
+
+  return hasHydrated ? count : 0;
 }
 
 export function useCartSubtotal() {

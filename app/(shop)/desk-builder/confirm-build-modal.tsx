@@ -90,7 +90,7 @@ function ConfirmBuildModal({
                     {selection.categoryName}
                   </p>
                 </div>
-                <p className="text-foreground text-lg">
+                <p className="text-foreground font-mono text-lg">
                   {formatPrice(selection.price)}
                 </p>
               </li>
@@ -102,7 +102,7 @@ function ConfirmBuildModal({
           <div className="flex flex-col gap-2">
             <div className="text-body flex justify-between">
               <span>Subtotal</span>
-              <span>{formatPrice(totals.subtotal)}</span>
+              <span className="font-mono">{formatPrice(totals.subtotal)}</span>
             </div>
 
             {totals.discount > 0 && (

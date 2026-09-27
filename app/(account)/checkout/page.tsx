@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import { CheckoutForm } from "./checkout-form";
 
 export default async function CheckoutPage() {
   const supabase = await createClient();
@@ -9,6 +10,8 @@ export default async function CheckoutPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Belt-and-suspenders: proxy.ts already protects this route, but a
+  // Server Component should never assume a null user can't reach here.
   if (!user) {
     redirect("/login?next=/checkout");
   }
@@ -22,6 +25,10 @@ export default async function CheckoutPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
       <h1 className="text-h2 text-foreground mb-8 font-bold">Checkout</h1>
+      <CheckoutForm
+        initialFullName={profile?.full_name ?? ""}
+        initialPhone={profile?.phone ?? ""}
+      />
     </div>
   );
 }

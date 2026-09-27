@@ -39,7 +39,7 @@ function CartItemRow({ item, onQuantityChange, onRemove }: CartItemRowProps) {
           >
             {item.name}
           </Link>
-          <p className="text-accent text-base sm:text-lg">
+          <p className="text-accent font-mono text-base sm:text-lg">
             {formatPrice(item.price)}
           </p>
         </div>
@@ -52,7 +52,7 @@ function CartItemRow({ item, onQuantityChange, onRemove }: CartItemRowProps) {
         </div>
       </div>
 
-      <p className="text-foreground hidden text-right sm:block">
+      <p className="text-foreground hidden text-right font-mono sm:block">
         {formatPrice(item.price * item.quantity)}
       </p>
 

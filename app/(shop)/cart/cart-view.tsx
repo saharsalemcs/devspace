@@ -14,8 +14,10 @@ import { CartBundleGroup } from "./cart-bundle-group";
 import { CartEmptyState } from "./cart-empty-state";
 import { CartItemRow } from "./cart-item-row";
 import { CartSummary } from "./cart-summary";
+import { CartViewSkeleton } from "./cart-view-skeleton";
 
 function CartView({ isLoggedIn }: { isLoggedIn: boolean }) {
+  const hasHydrated = useCartStore((state) => state.hasHydrated);
   const items = useCartStore((state) => state.items);
   const removeItem = useCartStore((state) => state.removeItem);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
@@ -58,6 +60,13 @@ function CartView({ isLoggedIn }: { isLoggedIn: boolean }) {
         toast.error("Couldn't sync cart. Please refresh the page.");
       });
     }
+  }
+
+  // Wait for the persisted cart to be read from localStorage before
+  // deciding whether it's actually empty — otherwise this briefly renders
+  // CartEmptyState on every load, even when the cart has items.
+  if (!hasHydrated) {
+    return <CartViewSkeleton />;
   }
 
   if (items.length === 0) {

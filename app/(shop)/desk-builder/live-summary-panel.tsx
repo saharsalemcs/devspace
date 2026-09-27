@@ -58,7 +58,7 @@ function LiveSummaryPanel() {
                 <p className="text-body-sm text-foreground truncate">
                   {selection.name}
                 </p>
-                <p className="text-caption text-neutral-400">
+                <p className="text-caption font-mono text-neutral-400">
                   {formatPrice(selection.price)}
                 </p>
               </div>
@@ -79,7 +79,7 @@ function LiveSummaryPanel() {
       <div className="flex flex-col gap-2">
         <div className="text-body flex justify-between text-neutral-300">
           <span>Subtotal</span>
-          <span>{formatPrice(subtotal)}</span>
+          <span className="font-mono">{formatPrice(subtotal)}</span>
         </div>
 
         {discount > 0 && (
@@ -90,7 +90,7 @@ function LiveSummaryPanel() {
               }
             >
               <span>Bundle Discount (5%)</span>
-              <span>-{formatPrice(discount)}</span>
+              <span className="font-mono">-{formatPrice(discount)}</span>
             </TooltipTrigger>
             <TooltipContent>
               5% discount applies when you add 3+ components
@@ -103,7 +103,7 @@ function LiveSummaryPanel() {
 
       <div className="text-h4 text-foreground flex justify-between">
         <span>Total</span>
-        <span className="text-accent">{formatPrice(total)}</span>
+        <span className="text-accent font-mono">{formatPrice(total)}</span>
       </div>
 
       <Button
