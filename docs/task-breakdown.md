@@ -387,7 +387,7 @@
 - [x] After successful login, read localStorage cart → upsert into `cart_items` — `app/(auth)/login/login-form.tsx` reads `useCartStore.getState().items` and passes it to the `signIn` server action, which calls `mergeCartItems()` (`lib/queries/cart.ts`) before returning
 - [x] Clear localStorage cart after successful merge — not a separate step: `setItems()` (new `useCartStore` action) replaces the store's `items` wholesale with the merged DB cart, and the `persist` middleware overwrites localStorage with that same value on the next tick
 - [x] Fetch DB cart into Zustand store for logged-in users — `fetchDbCart()` (`lib/queries/cart.ts`) joins `cart_items` with `products` (for `name`/`slug`/`price`/`image_url`, which `cart_items` itself doesn't store) and the form calls `setItems(result.cartItems)` with it
-- [x] Handle merge conflicts (sum quantities on same `product_id` + `bundle_id`) — not a plain `.upsert()`: `cart_items` has two *partial* unique indexes (one for `bundle_id IS NULL`, one for `bundle_id IS NOT NULL` — see db-schema.md § 4), which a single `ON CONFLICT (user_id, product_id, bundle_id)` target can't match. Added RPC `merge_cart_items(p_items jsonb)` (`supabase/migrations/007_merge_cart_items.sql`) that picks the correct conflict target per row and sums `quantity` on conflict — `signIn` no longer calls `redirect()` itself (unlike the other auth actions) since the client needs the merged cart back first; it returns `{ ok, cartItems, redirectTo }` and the form does `window.location.href = redirectTo` (a full reload, same reasoning as `signOut` in `user-menu.tsx`, so the Navbar and any cached routes don't show stale guest-session state). A merge/fetch failure doesn't block login — it's caught server-side and the client leaves the local cart untouched, to retry on the next login.
+- [x] Handle merge conflicts (sum quantities on same `product_id` + `bundle_id`) — not a plain `.upsert()`: `cart_items` has two _partial_ unique indexes (one for `bundle_id IS NULL`, one for `bundle_id IS NOT NULL` — see db-schema.md § 4), which a single `ON CONFLICT (user_id, product_id, bundle_id)` target can't match. Added RPC `merge_cart_items(p_items jsonb)` (`supabase/migrations/007_merge_cart_items.sql`) that picks the correct conflict target per row and sums `quantity` on conflict — `signIn` no longer calls `redirect()` itself (unlike the other auth actions) since the client needs the merged cart back first; it returns `{ ok, cartItems, redirectTo }` and the form does `window.location.href = redirectTo` (a full reload, same reasoning as `signOut` in `user-menu.tsx`, so the Navbar and any cached routes don't show stale guest-session state). A merge/fetch failure doesn't block login — it's caught server-side and the client leaves the local cart untouched, to retry on the next login.
 
 **✅ Phase 5 Complete when:** guests can add/edit cart in localStorage, and cart merges to DB on login.
 
@@ -436,31 +436,31 @@
 
 ### 7.1 Data Layer
 
-- [ ] Create `useReviews(product_id)` hook
-- [ ] Create `useSubmitReview()` mutation hook
-- [ ] Create `useUpdateReview()` mutation hook (customer, own review only)
-- [ ] Create `useDeleteOwnReview()` mutation hook (customer, own review only)
-- [ ] Create `useDeleteReview()` mutation hook (admin, any review)
+- [x] Create `useReviews(product_id)` hook
+- [x] Create `useSubmitReview()` mutation hook
+- [x] Create `useUpdateReview()` mutation hook (customer, own review only)
+- [x] Create `useDeleteOwnReview()` mutation hook (customer, own review only)
+- [x] Create `useDeleteReview()` mutation hook (admin, any review)
 
 ### 7.2 Review Display
 
-- [ ] Reviews section on product detail page
-- [ ] List reviews sorted by newest
-- [ ] Star rating renderer (empty/filled stars)
-- [ ] Show reviewer name (from `profiles.full_name`) + date
-- [ ] Admin view: show a "Delete" action on every review (moderation only, no edit)
+- [x] Reviews section on product detail page
+- [x] List reviews sorted by newest
+- [x] Star rating renderer (empty/filled stars)
+- [x] Show reviewer name (from `profiles.full_name`) + date
+- [x] Admin view: show a "Delete" action on every review (moderation only, no edit)
 
 ### 7.3 Review Submission
 
-- [ ] "Write a review" form (visible only if logged in)
-- [ ] "Log in to review" prompt for guests
-- [ ] Interactive star selector (1–5)
-- [ ] Optional comment textarea
-- [ ] Submit action (handles unique-constraint error: user already reviewed)
-- [ ] Optimistic update on submit — wrap the mutation in `useTransition`, and use React's `useOptimistic(reviews, (state, newReview) => [...state, newReview])` so the review appears in the list instantly (rendered with a `pending` style) while `useSubmitReview()` is still in flight; revert automatically if it errors
-- [ ] If the user already reviewed this product, show **their own review** with "Edit" and "Delete" actions (via `useUpdateReview`/`useDeleteOwnReview`) instead of the submission form
-- [ ] Edit mode reuses the same form, pre-filled with the existing rating/comment
-- [ ] Apply the same `useOptimistic` pattern to edit/delete: show the edited text or remove the card immediately, reconciling with the server-confirmed state once `useUpdateReview`/`useDeleteOwnReview` resolves
+- [x] "Write a review" form (visible only if logged in)
+- [x] "Log in to review" prompt for guests
+- [x] Interactive star selector (1–5)
+- [x] Optional comment textarea
+- [x] Submit action (handles unique-constraint error: user already reviewed)
+- [x] Optimistic update on submit — wrap the mutation in `useTransition`, and use React's `useOptimistic(reviews, (state, newReview) => [...state, newReview])` so the review appears in the list instantly (rendered with a `pending` style) while `useSubmitReview()` is still in flight; revert automatically if it errors
+- [x] If the user already reviewed this product, show **their own review** with "Edit" and "Delete" actions (via `useUpdateReview`/`useDeleteOwnReview`) instead of the submission form
+- [x] Edit mode reuses the same form, pre-filled with the existing rating/comment
+- [x] Apply the same `useOptimistic` pattern to edit/delete: show the edited text or remove the card immediately, reconciling with the server-confirmed state once `useUpdateReview`/`useDeleteOwnReview` resolves
 
 **✅ Phase 7 Complete when:** logged-in customers can post, edit, and delete their own reviews (appearing immediately), and admins can delete any review.
 
