@@ -73,3 +73,72 @@ export async function submitReview(
       : data.profiles,
   };
 }
+
+export type UpdateReviewInput = {
+  reviewId: string;
+  productId: string; // needed to invalidate the right query key
+  rating: number;
+  comment: string | null;
+};
+
+export async function updateReview(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  input: UpdateReviewInput,
+): Promise<Review> {
+  const { data, error } = await supabase
+    .from("reviews")
+    .update({
+      rating: input.rating,
+      comment: input.comment,
+    })
+    .eq("id", input.reviewId)
+    .eq("user_id", userId)
+    .select("*, profiles(full_name)")
+    .single();
+
+  if (error) throw error;
+
+  return {
+    ...data,
+    profiles: Array.isArray(data.profiles)
+      ? (data.profiles[0] ?? null)
+      : data.profiles,
+  };
+}
+
+export type DeleteOwnReviewInput = {
+  reviewId: string;
+  productId: string;
+};
+
+export async function deleteOwnReview(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  input: DeleteOwnReviewInput,
+): Promise<void> {
+  const { error } = await supabase
+    .from("reviews")
+    .delete()
+    .eq("id", input.reviewId)
+    .eq("user_id", userId);
+
+  if (error) throw error;
+}
+
+export type DeleteReviewInput = {
+  reviewId: string;
+  productId: string;
+};
+
+export async function deleteReview(
+  supabase: SupabaseClient<Database>,
+  input: DeleteReviewInput,
+): Promise<void> {
+  const { error } = await supabase
+    .from("reviews")
+    .delete()
+    .eq("id", input.reviewId);
+
+  if (error) throw error;
+}
