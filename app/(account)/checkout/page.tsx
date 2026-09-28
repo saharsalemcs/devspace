@@ -10,8 +10,6 @@ export default async function CheckoutPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Belt-and-suspenders: proxy.ts already protects this route, but a
-  // Server Component should never assume a null user can't reach here.
   if (!user) {
     redirect("/login?next=/checkout");
   }

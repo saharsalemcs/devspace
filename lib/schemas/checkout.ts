@@ -46,12 +46,14 @@ export const shippingAddressSchema = z.object({
 
 export type ShippingAddress = z.infer<typeof shippingAddressSchema>;
 
+export const EGYPT_PHONE_REGEX = /^01[0125][0-9]{8}$/;
+
 export const customerInfoSchema = z.object({
   customer_name: z.string().trim().min(2, "Enter your full name"),
   customer_phone: z
     .string()
     .trim()
-    .regex(/^01[0125][0-9]{8}$/, "Enter a valid Egyptian phone number"),
+    .regex(EGYPT_PHONE_REGEX, "Enter a valid Egyptian phone number"),
 });
 
 export type CustomerInfo = z.infer<typeof customerInfoSchema>;
