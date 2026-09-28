@@ -1,9 +1,21 @@
 # DevSpace — Task Breakdown & Execution Plan
 
-**Version:** 1.1 (MVP)
+**Version:** 1.3 (MVP)
 **Document Type:** Actionable Checklist
 **Companion To:** project-spec.md · design-system.md · db-schema.md
-**Last Updated:** September 19, 2026
+**Last Updated:** September 28, 2026
+
+**Changelog (v1.2 → v1.3):**
+
+- § 5.4: added a third Post-Completion Fix — the Zustand `persist` cart hydration flash (Navbar badge, `/cart`, and `/checkout` all briefly read the pre-hydration empty cart on reload)
+- § 8: all of Phase 8 (Checkout & Orders) implemented and checked off, with honest notes on 3 places the implementation is narrower than the original checklist line (no real delivery-estimate data, no order status timeline/history, no orders-count on the `/account` overview)
+- § 8.7 (new): **Post-Completion Fixes** — three bugs found while testing Phase 8, none caught by the original checklist: a pre-existing `place_order()` SQL ordering bug (`order_items` inserted before the parent `orders` row existed — every checkout failed), a missing `app/(account)/layout.tsx` (checkout/account pages rendered with no Navbar/Footer), and a race condition where the post-order success redirect could lose to the empty-cart-redirect effect re-firing on `clearCart()`
+
+**Changelog (v1.1 → v1.2):**
+
+- § 5.2 / § 5.3: added a **Post-Completion Fixes** note — two bugs found during Phase 7 code review, not caught by the original Phase 5 checklist (see below)
+- § 7: all of Phase 7 (Reviews) implemented and checked off — data layer, display, and submission (with `useOptimistic`/`useTransition`)
+- § 7.1: added `useCurrentUser()` (new hook, not in the original checklist — needed so the UI layer, not just mutations, can know who's logged in and whether they're an admin) + an `onAuthStateChange` listener added to `QueryProvider` so it stays in sync across login/logout without a manual refresh
 
 **Changelog (v1.0 → v1.1):**
 
@@ -387,9 +399,17 @@
 - [x] After successful login, read localStorage cart → upsert into `cart_items` — `app/(auth)/login/login-form.tsx` reads `useCartStore.getState().items` and passes it to the `signIn` server action, which calls `mergeCartItems()` (`lib/queries/cart.ts`) before returning
 - [x] Clear localStorage cart after successful merge — not a separate step: `setItems()` (new `useCartStore` action) replaces the store's `items` wholesale with the merged DB cart, and the `persist` middleware overwrites localStorage with that same value on the next tick
 - [x] Fetch DB cart into Zustand store for logged-in users — `fetchDbCart()` (`lib/queries/cart.ts`) joins `cart_items` with `products` (for `name`/`slug`/`price`/`image_url`, which `cart_items` itself doesn't store) and the form calls `setItems(result.cartItems)` with it
-- [x] Handle merge conflicts (sum quantities on same `product_id` + `bundle_id`) — not a plain `.upsert()`: `cart_items` has two _partial_ unique indexes (one for `bundle_id IS NULL`, one for `bundle_id IS NOT NULL` — see db-schema.md § 4), which a single `ON CONFLICT (user_id, product_id, bundle_id)` target can't match. Added RPC `merge_cart_items(p_items jsonb)` (`supabase/migrations/007_merge_cart_items.sql`) that picks the correct conflict target per row and sums `quantity` on conflict — `signIn` no longer calls `redirect()` itself (unlike the other auth actions) since the client needs the merged cart back first; it returns `{ ok, cartItems, redirectTo }` and the form does `window.location.href = redirectTo` (a full reload, same reasoning as `signOut` in `user-menu.tsx`, so the Navbar and any cached routes don't show stale guest-session state). A merge/fetch failure doesn't block login — it's caught server-side and the client leaves the local cart untouched, to retry on the next login.
+- [x] Handle merge conflicts (sum quantities on same `product_id` + `bundle_id`) — not a plain `.upsert()`: `cart_items` has two *partial* unique indexes (one for `bundle_id IS NULL`, one for `bundle_id IS NOT NULL` — see db-schema.md § 4), which a single `ON CONFLICT (user_id, product_id, bundle_id)` target can't match. Added RPC `merge_cart_items(p_items jsonb)` (`supabase/migrations/007_merge_cart_items.sql`) that picks the correct conflict target per row and sums `quantity` on conflict — `signIn` no longer calls `redirect()` itself (unlike the other auth actions) since the client needs the merged cart back first; it returns `{ ok, cartItems, redirectTo }` and the form does `window.location.href = redirectTo` (a full reload, same reasoning as `signOut` in `user-menu.tsx`, so the Navbar and any cached routes don't show stale guest-session state). A merge/fetch failure doesn't block login — it's caught server-side and the client leaves the local cart untouched, to retry on the next login.
 
 **✅ Phase 5 Complete when:** guests can add/edit cart in localStorage, and cart merges to DB on login.
+
+### 5.4 Post-Completion Fixes (found during Phase 7 review)
+
+Two bugs surfaced after Phase 5 was already checked off — neither was covered by the original checklist above, so logging them here rather than editing history:
+
+- [x] **Cart leaked between users on shared devices** — `signOut()` (`lib/supabase/auth-actions.ts`) never cleared the local Zustand cart, only the Supabase session. On a shared device, the next user's login would merge the previous user's leftover `localStorage` cart into their own (via `mergeCartItems`). Fix: `user-menu.tsx`'s `handleSignOut()` now calls `useCartStore.getState().clearCart()` right after a successful `signOut()`, before the redirect.
+- [x] **Removed/edited cart items reappeared after logout → login** — cart mutations (`removeItem`, `updateQuantity`, `removeBundle`) only ever updated the local Zustand store; nothing wrote the change back to `cart_items` in the DB. For a logged-in user, `fetchDbCart()` on the next login would re-pull the stale (never-deleted) rows. Fix: added `deleteCartItem`, `updateCartItemQuantity`, `deleteCartBundle` to `lib/queries/cart.ts` (RLS-protected, no client-side `user_id` filter needed). `cart-view.tsx` now updates the local store immediately for responsiveness and fires the matching DB call in the background whenever `isLoggedIn`, with a `toast.error` on sync failure. Note: a failed DB sync does **not** currently roll back the local change (accepted low-risk tradeoff — cart data, not reviews/orders).
+- [x] **Cart briefly showed as empty on every page reload (Navbar badge, `/cart`, and `/checkout`)** — Zustand's `persist` middleware can't read `localStorage` during SSR, so `useCartStore` always renders with its default `items: []` on first paint, then updates once the client reads the persisted cart. Any UI reading `items.length` before that hydration finished briefly (or wrongly) treated a non-empty cart as empty — worst case, `checkout-form.tsx`'s empty-cart redirect fired on the false-empty state and bounced users back to `/cart` on reload, before the real cart had even loaded. Fix: added a `hasHydrated` flag to `cart-store.ts`, set via `persist`'s `onRehydrateStorage` callback once `localStorage` has actually been read. Gated on it in `useCartItemCount` (returns `0` while not hydrated), `cart-view.tsx` (renders a `CartViewSkeleton` while not hydrated, before deciding whether to show `CartEmptyState`), and `checkout-form.tsx` (same idea, see § 8.7 for a related redirect bug this surfaced).
 
 ---
 
@@ -436,31 +456,32 @@
 
 ### 7.1 Data Layer
 
-- [x] Create `useReviews(product_id)` hook
-- [x] Create `useSubmitReview()` mutation hook
-- [x] Create `useUpdateReview()` mutation hook (customer, own review only)
-- [x] Create `useDeleteOwnReview()` mutation hook (customer, own review only)
-- [x] Create `useDeleteReview()` mutation hook (admin, any review)
+- [x] Create `useReviews(product_id)` hook — `hooks/use-reviews.ts` + `lib/queries/reviews.ts` (`fetchReviews`, `reviewsQueryKey`); normalizes the `profiles(full_name)` join, which Supabase types as an array (`reviews_user_id_fkey` is `isOneToOne: false` in the generated types even though one review always has exactly one author)
+- [x] Create `useSubmitReview()` mutation hook — `hooks/use-submit-review.ts`; `mutationFn` calls `supabase.auth.getUser()` itself (defense-in-depth on top of the UI only showing the form when logged in) before inserting; unique-constraint violations (`23505`) are surfaced as a typed `DuplicateReviewError` instead of a raw Postgres error code
+- [x] Create `useUpdateReview()` mutation hook (customer, own review only) — `hooks/use-update-review.ts`; query includes `.eq("user_id", userId)` as defense-in-depth, but the real guard is the RLS policy `"Users can update own review"` (`auth.uid() = user_id`)
+- [x] Create `useDeleteOwnReview()` mutation hook (customer, own review only) — `hooks/use-delete-own-review.ts`; same defense-in-depth pattern as update
+- [x] Create `useDeleteReview()` mutation hook (admin, any review) — `hooks/use-delete-review.ts`; deliberately has **no** `.eq("user_id", ...)` filter (admins delete any review) — authorization is entirely RLS (`is_admin()`), so this hook doesn't even need `auth.getUser()`
+- [x] **(Added, not in original checklist)** Create `useCurrentUser()` hook — `hooks/use-current-user.ts` + `lib/queries/user.ts`; combines `supabase.auth.getUser()` + the caller's `profiles` row (`full_name`, `role`) into one cached query. Needed because 7.2/7.3 require knowing the current user's identity/role for **display** decisions (show admin delete button? show "your review" vs. the write form?), not just inside a mutation at submit time. Wired into `QueryProvider` via `supabase.auth.onAuthStateChange()` so it invalidates and refetches on login/logout without a manual page refresh
 
 ### 7.2 Review Display
 
-- [x] Reviews section on product detail page
-- [x] List reviews sorted by newest
-- [x] Star rating renderer (empty/filled stars)
-- [x] Show reviewer name (from `profiles.full_name`) + date
-- [x] Admin view: show a "Delete" action on every review (moderation only, no edit)
+- [x] Reviews section on product detail page — `components/features/reviews/reviews-section.tsx`, mounted in `product-detail.tsx` below the specs grid (passes `product.id`, not `slug`)
+- [x] List reviews sorted by newest — handled in `fetchReviews` (`order("created_at", { ascending: false })`)
+- [x] Star rating renderer (empty/filled stars) — reused the existing `RatingStars` (`components/features/rating-stars.tsx`), unchanged
+- [x] Show reviewer name (from `profiles.full_name`) + date — `review-card.tsx`, falls back to "Anonymous" if `full_name` is null
+- [x] Admin view: show a "Delete" action on every review (moderation only, no edit) — `review-card.tsx`, gated on `useCurrentUser().role === "admin"`; wrapped in a new `delete-review-dialog.tsx` (controlled `Dialog`, confirms before calling `useDeleteReview`, closes itself automatically on success and stays open with the row intact on failure)
 
 ### 7.3 Review Submission
 
-- [x] "Write a review" form (visible only if logged in)
-- [x] "Log in to review" prompt for guests
-- [x] Interactive star selector (1–5)
-- [x] Optional comment textarea
-- [x] Submit action (handles unique-constraint error: user already reviewed)
-- [x] Optimistic update on submit — wrap the mutation in `useTransition`, and use React's `useOptimistic(reviews, (state, newReview) => [...state, newReview])` so the review appears in the list instantly (rendered with a `pending` style) while `useSubmitReview()` is still in flight; revert automatically if it errors
-- [x] If the user already reviewed this product, show **their own review** with "Edit" and "Delete" actions (via `useUpdateReview`/`useDeleteOwnReview`) instead of the submission form
-- [x] Edit mode reuses the same form, pre-filled with the existing rating/comment
-- [x] Apply the same `useOptimistic` pattern to edit/delete: show the edited text or remove the card immediately, reconciling with the server-confirmed state once `useUpdateReview`/`useDeleteOwnReview` resolves
+- [x] "Write a review" form (visible only if logged in) — `review-submission-panel.tsx`
+- [x] "Log in to review" prompt for guests — same component, `Link` to `/login`
+- [x] Interactive star selector (1–5) — new `star-selector.tsx` (kept separate from the display-only `RatingStars` — different responsibilities: click/hover vs. render-a-number)
+- [x] Optional comment textarea — `review-form.tsx` (shared by both write and edit modes), using the existing `components/ui/textarea.tsx`
+- [x] Submit action (handles unique-constraint error: user already reviewed) — caught via `DuplicateReviewError`, surfaced with `sonner`'s `toast.error`
+- [x] Optimistic update on submit — implemented with `useOptimistic` + `useTransition`, but lifted **up** to `reviews-section.tsx` rather than kept local to the submission panel: a single reducer-style `useOptimistic(reviews, reviewsReducer)` handles `add` / `edit` / `delete` actions so the same optimistic list is shared by the submit form, the edit form, and the delete dialog — a per-component `useOptimistic` would only have been visible inside that component, not in the actual rendered list below it
+- [x] If the user already reviewed this product, show **their own review** with "Edit" and "Delete" actions (via `useUpdateReview`/`useDeleteOwnReview`) instead of the submission form — new `own-review-panel.tsx`; the main list (`review-card.tsx` instances) explicitly filters the current user's review out so it isn't rendered twice
+- [x] Edit mode reuses the same form, pre-filled with the existing rating/comment — `own-review-panel.tsx` toggles into `review-form.tsx` with `initialRating`/`initialComment`
+- [x] Apply the same `useOptimistic` pattern to edit/delete: show the edited text or remove the card immediately, reconciling with the server-confirmed state once `useUpdateReview`/`useDeleteOwnReview` resolves — same shared reducer as submit; the delete confirmation dialog wraps its `onConfirm` in a manual `Promise` so the `startTransition`/optimistic-dispatch can complete before the dialog decides whether to close (success) or stay open (failure)
 
 **✅ Phase 7 Complete when:** logged-in customers can post, edit, and delete their own reviews (appearing immediately), and admins can delete any review.
 
@@ -470,49 +491,57 @@
 
 ### 8.1 Checkout Page
 
-- [ ] Build `/checkout` page (protected by proxy)
-- [ ] Fetch the current user's `profiles` row (`full_name`, `phone`) on page load
-- [ ] Left column: shipping form — `customer_name` + `customer_phone` fields **prefilled** from `profiles` (editable), plus `street, city, governorate, postal_code, notes`
-- [ ] Right column: order summary (items, subtotal, discount, total)
-- [ ] Zod schema for shipping address (separate from `customer_name`/`customer_phone` validation)
-- [ ] Payment method radio (COD only in MVP)
-- [ ] "Place Order" button (disabled while submitting)
+- [x] Build `/checkout` page (protected by proxy) — `app/(account)/checkout/page.tsx`; also re-checks `auth.getUser()` itself (defense-in-depth on top of `proxy.ts`, same pattern used throughout — a Server Component shouldn't assume a null user can't reach it)
+- [x] Fetch the current user's `profiles` row (`full_name`, `phone`) on page load — done server-side in `page.tsx`, passed down as `initialFullName`/`initialPhone` props (no separate client fetch)
+- [x] Left column: shipping form — `customer_name` + `customer_phone` fields **prefilled** from `profiles` (editable), plus `street, city, governorate, postal_code, notes` — split into `customer-info-fields.tsx` + `shipping-fields.tsx`; `governorate` uses the `@base-ui/react` `Select` via react-hook-form's `Controller` (register() alone doesn't work for non-native-input controls)
+- [x] Right column: order summary (items, subtotal, discount, total) — `checkout-order-summary.tsx`, reusing `calculateCartTotals` from `lib/cart.ts` rather than a separate calculation
+- [x] Zod schema for shipping address (separate from `customer_name`/`customer_phone` validation) — `lib/schemas/checkout.ts`: `shippingAddressSchema`, `customerInfoSchema`, composed into `checkoutSchema`. Egypt's 27 governorates are a fixed local `z.enum` array (no DB table existed for this)
+- [x] Payment method radio (COD only in MVP) — `payment-method-fields.tsx`
+- [x] "Place Order" button (disabled while submitting) — in `checkout-order-summary.tsx`, `type="submit"` inside the single form spanning both columns
 
 ### 8.2 Place Order Action
 
-- [ ] Server action calls `place_order` RPC with cart items + shipping info + `customer_name` + `customer_phone` (from the form, prefilled-then-possibly-edited)
-- [ ] Pair the submit with `useTransition` + `useOffline()` (see § 0.8) so the "Place Order" button reads "Placing order (offline, will retry)…" if connectivity drops mid-submit — with `experimental.useOffline` on, the Server Action call itself stays pending and retries automatically once back online, instead of throwing and risking a lost/duplicate order
-- [ ] Surface the RPC's "missing phone" rejection as a clear form error (guides the user to add a phone number to their profile — or just retype it in the form — before retrying)
-- [ ] On success: clear cart (Zustand + `cart_items` in DB)
-- [ ] Redirect to `/checkout/success?order_id=...`
-- [ ] Handle errors (toast + preserve form data)
+- [x] Server action calls `place_order` RPC with cart items + shipping info + `customer_name` + `customer_phone` (from the form, prefilled-then-possibly-edited) — `actions.ts` (`placeOrder`) + `lib/queries/orders.ts` (`placeOrderRpc`)
+- [x] Pair the submit with `useOffline()` (see § 0.8) so the "Place Order" button reads "Placing order (offline, will retry)…" if connectivity drops mid-submit — **implementation deviates slightly**: used react-hook-form's own `isSubmitting` state (the submit handler is an `async` function awaited by `handleSubmit`) instead of a separate manual `useTransition`, since `isSubmitting` already covers the full pending duration including any Next.js `experimental.useOffline` retry-hold. Functionally equivalent to the checklist's intent.
+- [x] Surface the RPC's "missing phone" rejection as a clear form error — `actions.ts` reads the RPC's Postgres `hint` text directly (set in `place_order()` itself via `raise exception ... using hint = '...'`) rather than duplicating the message client-side, and matches on `error.message` to attach it to the `customer_phone` field specifically
+- [x] On success: clear cart (Zustand + `cart_items` in DB) — DB-side clear (`clearDbCartAfterOrder`) runs server-side, best-effort, right after the RPC succeeds (logged, not surfaced, if it fails — the order itself already succeeded); Zustand/localStorage clear (`useCartStore.getState().clearCart()`) runs client-side once the action returns `ok: true`, same split as the logout fix in § 5.4
+- [x] Redirect to `/checkout/success?order_id=...` — see § 8.7 for a race condition this exposed
+- [x] Handle errors (toast + preserve form data) — `sonner`'s `toast.error`; form data is naturally preserved since a failed submit never resets the form
 
 ### 8.3 Order Confirmation
 
-- [ ] Build `/checkout/success` page
-- [ ] Show order number, total, estimated delivery
-- [ ] "View Order" + "Continue Shopping" CTAs
+- [x] Build `/checkout/success` page — `app/(account)/checkout/success/page.tsx`; reads `order_id` from `searchParams`, shows a "couldn't find that order" state (not `notFound()`, since the id is an optional query param here, not part of the route) if missing or not the caller's own order (RLS silently returns no row for both cases — indistinguishable, and don't need to be)
+- [x] Show order number, total, estimated delivery — **deviation**: there is no delivery-estimate data anywhere in the schema (no shipping-time field, no carrier integration), so this shows a static "3–5 business days" string rather than a computed estimate. Revisit if real delivery timing is ever tracked.
+- [x] "View Order" + "Continue Shopping" CTAs — link to `/account/orders/[id]` and `/products` respectively
 
 ### 8.4 Order History
 
-- [ ] Build `/account/orders` page
-- [ ] List user's orders (newest first) with status badges
-- [ ] Show order date, total, item count
-- [ ] Link → `/account/orders/[id]` for details
+- [x] Build `/account/orders` page — `app/(account)/account/orders/page.tsx` + `orders-list.tsx`
+- [x] List user's orders (newest first) with status badges — `lib/order-status.ts` (new) centralizes status→label/status→badge-variant mapping (`pending`/`processing`/`shipped`/`delivered`), shared with 8.5 and the future admin order list
+- [x] Show order date, total, item count — `item_count` computed via PostgREST's `order_items(count)` aggregate in `fetchOrders()` rather than fetching every `order_items` row just to count them
+- [x] Link → `/account/orders/[id]` for details
 
 ### 8.5 Order Details
 
-- [ ] Build `/account/orders/[id]` page
-- [ ] Show all line items (with bundle grouping)
-- [ ] Show shipping address, payment method, status timeline
-- [ ] Show total breakdown (subtotal, discount, total)
+- [x] Build `/account/orders/[id]` page — `app/(account)/account/orders/[id]/page.tsx` + `order-detail-view.tsx`; uses `notFound()` here (unlike 8.3) since the id is part of the route itself
+- [x] Show all line items (with bundle grouping) — `groupOrderItems()` added to `lib/order-status.ts`, mirroring `lib/cart.ts`'s `groupCartItems` but over the `order_items` snapshot shape (`product_name`, no `slug`/`imageUrl` — those aren't stored per order)
+- [x] Show shipping address, payment method — done. **Status timeline was not implemented** — only the current status badge is shown, not a history of status changes. There's no `order_status_history` table or equivalent in the schema, so there's no data to build a timeline from; would need a new table + a trigger/RPC update to `place_order`/order-status changes before this can be built.
+- [x] Show total breakdown (subtotal, discount, total) — done
 
 ### 8.6 Profile
 
-- [ ] Build `/account` overview (name, email, phone, orders count)
-- [ ] Add "Edit Profile" form (full_name, phone)
+- [x] Add "Edit Profile" form (full_name, phone) — `app/(account)/account/page.tsx` + `profile-form.tsx`; email shown read-only (lives in `auth.users`, not `profiles` — changing it needs Supabase's email-confirmation flow, out of scope here); `lib/schemas/profile.ts` reuses `EGYPT_PHONE_REGEX` extracted out of `checkout.ts`'s `customerInfoSchema` rather than duplicating the pattern
+- [ ] Build `/account` overview (name, email, phone, **orders count**) — **not fully built**: the page shows name/email/phone (editable), but does not show an orders count or otherwise summarize order history on this page. Would need a small additional query (e.g. a `count` on `orders` for the current user) and a bit of layout work to add.
 
-**✅ Phase 8 Complete when:** customers can complete checkout, see confirmation, and review order history.
+### 8.7 Post-Completion Fixes (found while testing Phase 8)
+
+Three bugs surfaced while testing checkout end-to-end — none caught by the original checklist above:
+
+- [x] **`place_order()` failed on every call with a foreign key violation** — `003_functions.sql`'s "Step 1" comment read "Create the order shell" but only ran `v_order_id := gen_random_uuid()`; the actual `insert into orders` didn't happen until "Step 4", four steps *after* `order_items` rows referencing that `order_id` were already being inserted in "Step 2". Every checkout attempt failed with `insert or update on table "order_items" violates foreign key constraint "order_items_order_id_fkey"`. This was a pre-existing bug from Phase 2/3, invisible until an actual order was placed. Fix: `005_fix_place_order_insert_order.sql` (`create or replace function`) — the `orders` row is now inserted immediately after generating `v_order_id`, with zeroed totals as a genuine placeholder (the "shell" the original comment described); the final step `UPDATE`s that same row with the real computed totals instead of a second `INSERT`.
+- [x] **Checkout/account pages rendered with no Navbar or Footer** — `app/(shop)/layout.tsx` (the only place `<Navbar />`/`<Footer />` were rendered) doesn't apply to routes under the separate `(account)` route group; Next.js route groups don't inherit each other's layouts regardless of how similar the pages should look. Every page built in this phase (`/checkout`, `/checkout/success`, `/account`, `/account/orders`, `/account/orders/[id]`) rendered bare inside the root layout. Fix: added `app/(account)/layout.tsx`, identical in content to `(shop)/layout.tsx` — both groups share the same page chrome, they're just split for routing organization.
+- [x] **Post-order success redirect sometimes lost a race and landed the user back on `/cart`** — `checkout-form.tsx`'s empty-cart-redirect guard originally depended on `items.length` and re-ran on every change to it, not just once on page load. `onSubmit`'s `useCartStore.getState().clearCart()` (which sets `items` to `[]`) re-triggered that effect immediately before `router.push("/checkout/success?...")`, and `router.replace("/cart")` sometimes won the race. Fix: the effect now depends on `hasHydrated` only (see § 5.4's third fix) — it checks once, when the persisted cart finishes hydrating, rather than continuously.
+
+**✅ Phase 8 Complete when:** customers can complete checkout, see confirmation, and review order history. *(Met, with the three narrower-than-checklist items noted above under 8.3/8.5/8.6.)*
 
 ---
 

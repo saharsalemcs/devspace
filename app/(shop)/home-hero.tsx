@@ -19,8 +19,8 @@ function HomeHero() {
           Build the desk setup you actually want
         </h1>
         <p className="text-body-lg max-w-xl text-neutral-300">
-          Screens, keyboards, mice, lighting and desks &mdash; shop them one by
-          one, or assemble a complete setup with the DevSpace Desk Builder.
+          Screens, keyboards, mice, lighting and desks. shop them one by one, or
+          assemble a complete setup with the DevSpace Desk Builder.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Button
