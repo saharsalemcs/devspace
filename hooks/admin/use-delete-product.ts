@@ -11,7 +11,7 @@ export function useDeleteProduct() {
   return useMutation({
     mutationFn: (productId: string) => deleteProduct(createClient(), productId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      return queryClient.invalidateQueries({ queryKey: ["admin-products"] });
     },
   });
 }

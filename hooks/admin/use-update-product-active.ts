@@ -16,8 +16,9 @@ export function useUpdateProductActive() {
   return useMutation({
     mutationFn: ({ productId, isActive }: UpdateProductActiveInput) =>
       updateProductActive(createClient(), productId, isActive),
+
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      return queryClient.invalidateQueries({ queryKey: ["admin-products"] });
     },
   });
 }
