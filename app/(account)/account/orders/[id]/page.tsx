@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import { fetchOrderDetail } from "@/lib/queries/orders";
-import { OrderDetailView } from "./order-detail-view";
+import { OrderDetailView } from "@/components/features/orders/order-detail-view";
 
 interface OrderDetailPageProps {
   params: Promise<{ id: string }>;

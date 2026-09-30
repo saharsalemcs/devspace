@@ -3,6 +3,11 @@ import { PlusIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { AdminProductsTable } from "./admin-products-table";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Manage Products",
+};
 
 export default function AdminProductsPage() {
   return (

@@ -10,6 +10,11 @@ import { createClient } from "@/lib/supabase/server";
 import { fetchAdminDashboardStats } from "@/lib/queries/admin-dashboard";
 import { formatPrice } from "@/lib/utils";
 import { KpiCard } from "@/components/features/admin/kpi-card";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+};
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient();

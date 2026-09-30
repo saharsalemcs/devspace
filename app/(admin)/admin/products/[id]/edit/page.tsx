@@ -5,6 +5,11 @@ import { fetchAdminProductById } from "@/lib/queries/admin-products";
 import { createClient } from "@/lib/supabase/server";
 import { ProductForm } from "../../product-form";
 import { requireAdmin } from "@/lib/supabase/auth";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Edit Product",
+};
 
 export default async function EditProductPage({
   params,

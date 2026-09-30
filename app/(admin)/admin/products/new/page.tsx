@@ -1,9 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { ProductForm } from "../product-form"; // adjust to where you put the form
 import { requireAdmin } from "@/lib/supabase/auth";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "New Product",
+};
 
 export default async function NewProductPage() {
-  // Layouts don't re-run on client navigation, so each admin page verifies too.
   await requireAdmin();
 
   const supabase = await createClient();

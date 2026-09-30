@@ -15,7 +15,7 @@ function KpiCard({ label, value, icon: Icon }: KpiCardProps) {
       <div className="bg-accent/10 text-accent flex size-10 shrink-0 items-center justify-center rounded-lg">
         <Icon className="size-5" />
       </div>
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-2">
         <span className="text-caption text-neutral-400 uppercase">{label}</span>
         <span className="text-h3 text-foreground font-bold">{value}</span>
       </div>
