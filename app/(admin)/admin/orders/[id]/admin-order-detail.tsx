@@ -23,6 +23,7 @@ function AdminOrderDetail({ initialOrder }: AdminOrderDetailProps) {
         variant="ghost"
         size="sm"
         className="w-fit"
+        nativeButton={false}
         render={<Link href="/admin/orders" />}
       >
         <ArrowLeftIcon />

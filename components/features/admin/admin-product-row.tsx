@@ -61,6 +61,7 @@ function AdminProductRow({ product }: AdminProductRowProps) {
           <Button
             variant="outline"
             size="sm"
+            nativeButton={false}
             render={<Link href={`/admin/products/${product.id}/edit`} />}
           >
             Edit

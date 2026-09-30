@@ -14,7 +14,10 @@ export default function AdminProductsPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-h2 text-foreground font-bold">Products</h1>
-        <Button render={<Link href="/admin/products/new" />}>
+        <Button
+          nativeButton={false}
+          render={<Link href="/admin/products/new" />}
+        >
           <PlusIcon />
           Create Product
         </Button>

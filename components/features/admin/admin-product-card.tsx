@@ -68,6 +68,7 @@ function AdminProductCard({ product }: AdminProductCardProps) {
           variant="outline"
           size="sm"
           className="flex-1"
+          nativeButton={false}
           render={<Link href={`/admin/products/${product.id}/edit`} />}
         >
           Edit
