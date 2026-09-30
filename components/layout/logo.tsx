@@ -1,59 +1,116 @@
 import type { ComponentProps } from "react";
 import { cn } from "@/lib/utils";
 
-// DevSpace mark: a curved ultrawide screen lit in Ember Orange, sitting on a
-// desk. The screen carries the brand accent; the stand and desk use
-// `currentColor` so the mark adapts to whatever surface it sits on.
+// DevSpace mark: An ultrawide curved developer display with signature Ember Orange
+// illumination, code prompt chevron, and elevated desk stand.
 function LogoMark({ className, ...props }: ComponentProps<"svg">) {
   return (
     <svg
       viewBox="0 0 32 32"
       fill="none"
-      aria-hidden
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       data-slot="logo-mark"
       className={cn("size-7 shrink-0", className)}
       {...props}
     >
       <defs>
         <linearGradient
-          id="ds-screen"
-          x1="4"
-          y1="7"
-          x2="28"
-          y2="18.6"
-          gradientUnits="userSpaceOnUse"
+          id="ds-accent-grad"
+          x1="0%"
+          y1="0%"
+          x2="100%"
+          y2="100%"
         >
-          <stop stopColor="#FF7D45" />
-          <stop offset="1" stopColor="#E64509" />
+          <stop offset="0%" stopColor="#FF7D45" />
+          <stop offset="100%" stopColor="#FF5A1F" />
         </linearGradient>
-        <radialGradient id="ds-glow">
-          <stop stopColor="#FF5A1F" stopOpacity="0.5" />
-          <stop offset="1" stopColor="#FF5A1F" stopOpacity="0" />
+        <linearGradient
+          id="ds-stand-grad"
+          x1="0%"
+          y1="0%"
+          x2="0%"
+          y2="100%"
+        >
+          <stop offset="0%" stopColor="#4A4A52" />
+          <stop offset="100%" stopColor="#26262B" />
+        </linearGradient>
+        <radialGradient
+          id="ds-ambient-glow"
+          cx="50%"
+          cy="50%"
+          r="50%"
+        >
+          <stop offset="0%" stopColor="#FF5A1F" stopOpacity="0.45" />
+          <stop offset="100%" stopColor="#FF5A1F" stopOpacity="0" />
         </radialGradient>
       </defs>
 
-      <ellipse cx="16" cy="20.5" rx="13" ry="5.5" fill="url(#ds-glow)" />
-      <path d="M14.5 16.8h3v5.6h-3z" fill="currentColor" />
+      {/* Ambient desk glow */}
+      <ellipse cx="16" cy="23" rx="12" ry="4" fill="url(#ds-ambient-glow)" />
+
+      {/* Desk surface */}
+      <rect x="4" y="24" width="24" height="2" rx="1" fill="#26262B" />
+
+      {/* Stand stem */}
+      <path d="M14.5 17h3v6h-3z" fill="url(#ds-stand-grad)" />
+
+      {/* Stand base plate */}
+      <rect x="11" y="22.5" width="10" height="2" rx="1" fill="#34343A" />
+
+      {/* Monitor chassis frame */}
       <rect
-        x="2.5"
-        y="22.4"
-        width="27"
-        height="2.6"
-        rx="1.3"
-        fill="currentColor"
+        x="3"
+        y="6"
+        width="26"
+        height="13.5"
+        rx="2.5"
+        fill="#151518"
+        stroke="#26262B"
+        strokeWidth="1"
       />
-      <path d="M4 8.6Q16 7 28 8.6V18.6Q16 17 4 18.6Z" fill="url(#ds-screen)" />
+
+      {/* Ember display screen */}
+      <rect
+        x="4.5"
+        y="7.5"
+        width="23"
+        height="10.5"
+        rx="1.5"
+        fill="url(#ds-accent-grad)"
+      />
+
+      {/* Top glass reflection highlight */}
       <path
-        d="M6 9.9Q16 8.4 26 9.9V11.2Q16 9.7 6 11.2Z"
-        fill="#FFFFFF"
-        fillOpacity="0.22"
+        d="M5.5 8.7h21"
+        stroke="#FFFFFF"
+        strokeWidth="0.8"
+        strokeOpacity="0.35"
+        strokeLinecap="round"
+      />
+
+      {/* Developer prompt symbol: > _ */}
+      <path
+        d="M8.5 10.8L11.5 12.8L8.5 14.8"
+        stroke="#FFFFFF"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <line
+        x1="13.5"
+        y1="14.8"
+        x2="17.5"
+        y2="14.8"
+        stroke="#FFFFFF"
+        strokeWidth="1.4"
+        strokeLinecap="round"
       />
     </svg>
   );
 }
 
-// Full lockup: mark + wordmark. Keeps the established "Dev" + ember "Space"
-// treatment the navbar already used.
+// Full lockup: mark + wordmark.
 function Logo({
   className,
   markClassName,
@@ -62,11 +119,11 @@ function Logo({
   return (
     <span
       data-slot="logo"
-      className={cn("inline-flex items-center gap-2", className)}
+      className={cn("inline-flex items-center gap-2.5", className)}
       {...props}
     >
       <LogoMark className={markClassName} />
-      <span className="text-h4 text-foreground font-bold tracking-tight">
+      <span className="text-h4 text-foreground font-bold tracking-tight select-none">
         Dev<span className="text-accent">Space</span>
       </span>
     </span>

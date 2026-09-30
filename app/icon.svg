@@ -1,23 +1,49 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="screen" x1="4" y1="7" x2="28" y2="18.6" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FF7D45"/>
-      <stop offset="1" stop-color="#E64509"/>
+    <linearGradient id="ds-bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1A1A1F" />
+      <stop offset="100%" stop-color="#0A0A0B" />
     </linearGradient>
-    <radialGradient id="glow">
-      <stop stop-color="#FF5A1F" stop-opacity="0.5"/>
-      <stop offset="1" stop-color="#FF5A1F" stop-opacity="0"/>
+    <linearGradient id="ds-accent-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF7D45" />
+      <stop offset="100%" stop-color="#FF5A1F" />
+    </linearGradient>
+    <linearGradient id="ds-stand-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4A4A52" />
+      <stop offset="100%" stop-color="#26262B" />
+    </linearGradient>
+    <radialGradient id="ds-ambient-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FF5A1F" stop-opacity="0.55" />
+      <stop offset="100%" stop-color="#FF5A1F" stop-opacity="0" />
     </radialGradient>
   </defs>
 
-  <rect width="32" height="32" rx="7" fill="#0A0A0B"/>
-  <rect x="0.5" y="0.5" width="31" height="31" rx="6.5" fill="none" stroke="#FF5A1F" stroke-opacity="0.3"/>
+  <!-- App icon container background for tab contrast -->
+  <rect width="32" height="32" rx="7" fill="url(#ds-bg-grad)" />
+  <rect width="32" height="32" rx="7" stroke="#26262B" stroke-width="1" />
 
-  <g transform="translate(16 15.35) scale(0.82) translate(-16 -16)">
-    <ellipse cx="16" cy="20.5" rx="13" ry="5.5" fill="url(#glow)"/>
-    <path d="M14.5 16.8h3v5.6h-3z" fill="#F5F5F7"/>
-    <rect x="2.5" y="22.4" width="27" height="2.6" rx="1.3" fill="#F5F5F7"/>
-    <path d="M4 8.6Q16 7 28 8.6V18.6Q16 17 4 18.6Z" fill="url(#screen)"/>
-    <path d="M6 9.9Q16 8.4 26 9.9V11.2Q16 9.7 6 11.2Z" fill="#FFFFFF" fill-opacity="0.22"/>
-  </g>
+  <!-- Ambient desk glow -->
+  <ellipse cx="16" cy="22" rx="10" ry="3.5" fill="url(#ds-ambient-glow)" />
+
+  <!-- Desk surface -->
+  <rect x="5" y="23" width="22" height="1.8" rx="0.9" fill="#26262B" />
+
+  <!-- Stand stem -->
+  <path d="M14.5 16.5h3v5.5h-3z" fill="url(#ds-stand-grad)" />
+
+  <!-- Stand base plate -->
+  <rect x="11.5" y="21.5" width="9" height="1.6" rx="0.8" fill="#4A4A52" />
+
+  <!-- Monitor chassis frame -->
+  <rect x="4" y="6.5" width="24" height="12.5" rx="2" fill="#151518" stroke="#26262B" stroke-width="0.8" />
+
+  <!-- Ember display screen -->
+  <rect x="5.2" y="7.7" width="21.6" height="10.1" rx="1.2" fill="url(#ds-accent-grad)" />
+
+  <!-- Top glass reflection highlight -->
+  <path d="M6 8.7h20" stroke="#FFFFFF" stroke-width="0.7" stroke-opacity="0.35" stroke-linecap="round" />
+
+  <!-- Developer prompt symbol: > _ -->
+  <path d="M9 10.7L11.8 12.7L9 14.7" stroke="#FFFFFF" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+  <line x1="13.5" y1="14.7" x2="17.2" y2="14.7" stroke="#FFFFFF" stroke-width="1.3" stroke-linecap="round" />
 </svg>
