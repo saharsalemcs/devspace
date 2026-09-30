@@ -5,7 +5,10 @@ import { toast } from "sonner";
 
 import { useUpdateProductActive } from "@/hooks/admin/use-update-product-active";
 import { useDeleteProduct } from "@/hooks/admin/use-delete-product";
-import type { AdminProduct } from "@/lib/queries/admin-products";
+import {
+  ProductInUseError,
+  type AdminProduct,
+} from "@/lib/queries/admin-products";
 
 export function useAdminProductActions(product: AdminProduct) {
   const updateActive = useUpdateProductActive();
@@ -31,11 +34,24 @@ export function useAdminProductActions(product: AdminProduct) {
   }
 
   function handleDelete() {
-    return deleteProduct.mutateAsync(product.id).catch(() => {
-      toast.error(
-        "Couldn't delete product. It may be referenced by existing orders.",
-      );
-      throw new Error("delete failed"); // re-throw so the confirm dialog stays open
+    return deleteProduct.mutateAsync(product.id).catch((error: unknown) => {
+      if (error instanceof ProductInUseError) {
+        toast.error(
+          error.message,
+          product.is_active
+            ? {
+                action: {
+                  label: "Deactivate",
+                  onClick: () => handleToggle(false),
+                },
+              }
+            : undefined,
+        );
+        return;
+      }
+
+      toast.error("Couldn't delete product. Please try again.");
+      throw error; // re-throw so the confirm dialog stays open for a retry
     });
   }
 
