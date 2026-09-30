@@ -44,6 +44,7 @@ const ORDER_STATUS_VARIANTS: Record<string, BadgeVariant> = {
   processing: "order-status-processing",
   shipped: "order-status-shipped",
   delivered: "order-status-delivered",
+  cancelled: "order-status-cancelled",
 };
 
 export function getOrderStatusLabel(status: string): string {
