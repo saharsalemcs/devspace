@@ -34,6 +34,7 @@ const badgeVariants = cva(
         "order-status-processing": "bg-info-500/15 text-info-500",
         "order-status-shipped": "bg-warning-500/15 text-warning-500",
         "order-status-delivered": "bg-success-500/15 text-success-500",
+        "order-status-cancelled": "bg-danger-500/15 text-danger-500",
       },
     },
     defaultVariants: {

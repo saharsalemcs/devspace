@@ -5,11 +5,38 @@ import type { OrderItemDetail } from "@/lib/queries/orders";
 
 type BadgeVariant = NonNullable<VariantProps<typeof badgeVariants>["variant"]>;
 
+export const ORDER_STATUSES = [
+  "pending",
+  "processing",
+  "shipped",
+  "delivered",
+  "cancelled",
+] as const;
+
+export type OrderStatus = (typeof ORDER_STATUSES)[number];
+
+export function isOrderStatus(value: string): value is OrderStatus {
+  return (ORDER_STATUSES as readonly string[]).includes(value);
+}
+
+const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
+  pending: ["processing", "cancelled"],
+  processing: ["shipped"],
+  shipped: ["delivered"],
+  delivered: [],
+  cancelled: [],
+};
+
+export function getAllowedNextStatuses(status: string): readonly OrderStatus[] {
+  return isOrderStatus(status) ? ORDER_STATUS_TRANSITIONS[status] : [];
+}
+
 const ORDER_STATUS_LABELS: Record<string, string> = {
   pending: "Pending",
   processing: "Processing",
   shipped: "Shipped",
   delivered: "Delivered",
+  cancelled: "Cancelled",
 };
 
 const ORDER_STATUS_VARIANTS: Record<string, BadgeVariant> = {
