@@ -46,6 +46,7 @@ function OwnReviewPanel({
           productId,
           ...data,
         });
+        toast.success("Review updated.");
       } catch {
         toast.error("Couldn't update your review. Please try again.");
       }
@@ -58,6 +59,7 @@ function OwnReviewPanel({
         dispatchOptimistic({ type: "delete", reviewId: review.id });
         try {
           await deleteOwnReview.mutateAsync({ reviewId: review.id, productId });
+          toast.success("Review deleted.");
           resolve();
         } catch {
           toast.error("Couldn't delete your review. Please try again.");

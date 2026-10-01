@@ -72,6 +72,7 @@ function ReviewSubmissionPanel({
       dispatchOptimistic({ type: "add", review: placeholder });
       try {
         await submitReview.mutateAsync({ productId, ...data });
+        toast.success("Review submitted!");
       } catch (error) {
         if (error instanceof DuplicateReviewError) {
           toast.error("You've already reviewed this product.");

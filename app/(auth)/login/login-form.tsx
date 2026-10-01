@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import { toast } from "sonner";
+
 import { loginSchema, type LoginInput } from "@/lib/schemas/auth";
 import { isSafeRedirect } from "@/lib/utils";
 import { useCartStore } from "@/stores/cart-store";
@@ -51,6 +53,7 @@ export function LoginForm() {
       const result = await signIn({ ...values, next }, localCart);
       if (!result.ok) {
         setFormError(result.error);
+        toast.error(result.error);
         return;
       }
 

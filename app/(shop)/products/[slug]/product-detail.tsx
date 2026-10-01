@@ -148,4 +148,4 @@ function ProductDetailSkeleton() {
   );
 }
 
-export { ProductDetail };
+export { ProductDetail, ProductDetailSkeleton };

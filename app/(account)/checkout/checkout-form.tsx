@@ -42,17 +42,6 @@ function CheckoutForm({ initialFullName, initialPhone }: CheckoutFormProps) {
     },
   });
 
-  // Guard against reaching /checkout with an empty cart (e.g. a stale
-  // link, or the cart was cleared in another tab). page.tsx (a Server
-  // Component) can't read the Zustand/localStorage cart, so this check
-  // has to live here, client-side.
-  //
-  // Deliberately depends on `hasHydrated` only, not `items.length` — this
-  // must run once, on load, not on every subsequent items change. If it
-  // re-ran on every change, a successful order's `clearCart()` call
-  // (which also sets items to []) would re-trigger it and race against
-  // the router.push to /checkout/success below, sometimes winning and
-  // sending the user back to /cart right after a successful order.
   useEffect(() => {
     if (!hasHydrated) return;
     if (items.length === 0) {
@@ -76,10 +65,7 @@ function CheckoutForm({ initialFullName, initialPhone }: CheckoutFormProps) {
       return;
     }
 
-    // Server-side (actions.ts) already best-effort cleared cart_items in
-    // the DB. This clears the client-side copy (Zustand + localStorage) —
-    // the two are separate stores and both need clearing, same as the
-    // logout fix in user-menu.tsx.
+    toast.success("Order placed successfully!");
     useCartStore.getState().clearCart();
     router.push(`/checkout/success?order_id=${result.orderId}`);
   }

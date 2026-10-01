@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import { toast } from "sonner";
+
 import {
   forgotPasswordSchema,
   type ForgotPasswordInput,
@@ -37,7 +39,12 @@ export function ForgotPasswordForm() {
   function onSubmit(values: ForgotPasswordInput) {
     startTransition(async () => {
       const result = await requestPasswordReset(values);
-      if (!result?.error) setSent(true);
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        setSent(true);
+        toast.success("Password reset instructions sent.");
+      }
     });
   }
 

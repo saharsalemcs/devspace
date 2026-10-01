@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import { toast } from "sonner";
+
 import { registerSchema, type RegisterInput } from "@/lib/schemas/auth";
 import { signUp } from "./actions";
 import { FormField } from "@/components/ui/form-field";
@@ -37,6 +39,9 @@ export function RegisterForm() {
       const result = await signUp(values);
       if (result?.error) {
         setFormError(result.error);
+        toast.error(result.error);
+      } else {
+        toast.success("Account created successfully!");
       }
     });
   }
