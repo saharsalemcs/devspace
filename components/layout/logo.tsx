@@ -1,8 +1,6 @@
 import type { ComponentProps } from "react";
 import { cn } from "@/lib/utils";
 
-// DevSpace mark: An ultrawide curved developer display with signature Ember Orange
-// illumination, code prompt chevron, and elevated desk stand.
 function LogoMark({ className, ...props }: ComponentProps<"svg">) {
   return (
     <svg
@@ -15,32 +13,15 @@ function LogoMark({ className, ...props }: ComponentProps<"svg">) {
       {...props}
     >
       <defs>
-        <linearGradient
-          id="ds-accent-grad"
-          x1="0%"
-          y1="0%"
-          x2="100%"
-          y2="100%"
-        >
+        <linearGradient id="ds-accent-grad" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#FF7D45" />
           <stop offset="100%" stopColor="#FF5A1F" />
         </linearGradient>
-        <linearGradient
-          id="ds-stand-grad"
-          x1="0%"
-          y1="0%"
-          x2="0%"
-          y2="100%"
-        >
+        <linearGradient id="ds-stand-grad" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stopColor="#4A4A52" />
           <stop offset="100%" stopColor="#26262B" />
         </linearGradient>
-        <radialGradient
-          id="ds-ambient-glow"
-          cx="50%"
-          cy="50%"
-          r="50%"
-        >
+        <radialGradient id="ds-ambient-glow" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="#FF5A1F" stopOpacity="0.45" />
           <stop offset="100%" stopColor="#FF5A1F" stopOpacity="0" />
         </radialGradient>
@@ -110,7 +91,6 @@ function LogoMark({ className, ...props }: ComponentProps<"svg">) {
   );
 }
 
-// Full lockup: mark + wordmark.
 function Logo({
   className,
   markClassName,

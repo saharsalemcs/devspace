@@ -7,11 +7,11 @@ function HomeHero() {
   return (
     <section
       data-slot="home-hero"
-      className="from-surface to-background relative overflow-hidden border-b border-neutral-700 bg-gradient-to-b"
+      className="from-surface to-background relative overflow-hidden border-b border-neutral-700 bg-linear-to-b"
     >
       <div
         aria-hidden
-        className="bg-ember-500/20 pointer-events-none absolute top-1/2 left-1/2 size-[36rem] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
+        className="bg-ember-500/20 pointer-events-none absolute top-1/2 left-1/2 size-144 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
       />
 
       <Container className="relative flex flex-col items-center gap-6 py-24 text-center">

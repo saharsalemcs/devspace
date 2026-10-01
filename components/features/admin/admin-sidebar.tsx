@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import { IconButton } from "@/components/ui/icon-button";
+import { Logo } from "@/components/layout/logo";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -64,7 +65,9 @@ function AdminSidebar() {
   return (
     <>
       <div className="bg-surface flex items-center justify-between border-b border-neutral-700 p-3 md:hidden">
-        <span className="text-caption text-neutral-500 uppercase">Admin</span>
+        <Link href="/">
+          <Logo />
+        </Link>
         <IconButton
           aria-label="Open menu"
           size="icon-sm"
@@ -75,9 +78,14 @@ function AdminSidebar() {
       </div>
 
       <nav className="bg-surface hidden w-56 shrink-0 flex-col gap-1 border-r border-neutral-700 p-4 md:flex">
-        <span className="text-body-sm mb-3 px-2 text-neutral-500 uppercase">
-          Admin
-        </span>
+        <div className="mb-6 flex flex-col px-1">
+          <Link href="/">
+            <Logo />
+          </Link>
+          <span className="text-body-sm mt-1 tracking-wider text-neutral-500 uppercase">
+            Admin Console
+          </span>
+        </div>
         <NavLinks pathname={pathname} />
       </nav>
 
