@@ -23,6 +23,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { AuthCard } from "../auth-card";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export function LoginForm() {
   const searchParams = useSearchParams();
@@ -94,9 +95,8 @@ export function LoginForm() {
             htmlFor="password"
             error={errors.password}
           >
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               autoComplete="current-password"
               aria-invalid={!!errors.password || undefined}
               {...register("password")}

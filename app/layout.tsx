@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import { OfflineBanner } from "@/components/layout/offline-banner";
+import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

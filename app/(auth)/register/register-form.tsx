@@ -20,6 +20,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { AuthCard } from "../auth-card";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export function RegisterForm() {
   const [pending, startTransition] = useTransition();
@@ -95,9 +96,8 @@ export function RegisterForm() {
                 : "At least 6 characters, with upper, lower, and a number."
             }
           >
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               autoComplete="new-password"
               aria-invalid={!!errors.password || undefined}
               {...register("password")}
@@ -109,9 +109,8 @@ export function RegisterForm() {
             htmlFor="confirm"
             error={errors.confirm}
           >
-            <Input
+            <PasswordInput
               id="confirm"
-              type="password"
               autoComplete="new-password"
               aria-invalid={!!errors.confirm || undefined}
               {...register("confirm")}

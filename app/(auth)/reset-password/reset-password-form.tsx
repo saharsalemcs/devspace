@@ -21,6 +21,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { AuthCard } from "../auth-card";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export function ResetPasswordForm() {
   const router = useRouter();
@@ -74,9 +75,8 @@ export function ResetPasswordForm() {
                 : "At least 6 characters, with upper, lower, and a number."
             }
           >
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               autoComplete="new-password"
               aria-invalid={!!errors.password || undefined}
               {...register("password")}
