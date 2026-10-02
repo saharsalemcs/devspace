@@ -399,7 +399,7 @@
 - [x] After successful login, read localStorage cart → upsert into `cart_items` — `app/(auth)/login/login-form.tsx` reads `useCartStore.getState().items` and passes it to the `signIn` server action, which calls `mergeCartItems()` (`lib/queries/cart.ts`) before returning
 - [x] Clear localStorage cart after successful merge — not a separate step: `setItems()` (new `useCartStore` action) replaces the store's `items` wholesale with the merged DB cart, and the `persist` middleware overwrites localStorage with that same value on the next tick
 - [x] Fetch DB cart into Zustand store for logged-in users — `fetchDbCart()` (`lib/queries/cart.ts`) joins `cart_items` with `products` (for `name`/`slug`/`price`/`image_url`, which `cart_items` itself doesn't store) and the form calls `setItems(result.cartItems)` with it
-- [x] Handle merge conflicts (sum quantities on same `product_id` + `bundle_id`) — not a plain `.upsert()`: `cart_items` has two *partial* unique indexes (one for `bundle_id IS NULL`, one for `bundle_id IS NOT NULL` — see db-schema.md § 4), which a single `ON CONFLICT (user_id, product_id, bundle_id)` target can't match. Added RPC `merge_cart_items(p_items jsonb)` (`supabase/migrations/007_merge_cart_items.sql`) that picks the correct conflict target per row and sums `quantity` on conflict — `signIn` no longer calls `redirect()` itself (unlike the other auth actions) since the client needs the merged cart back first; it returns `{ ok, cartItems, redirectTo }` and the form does `window.location.href = redirectTo` (a full reload, same reasoning as `signOut` in `user-menu.tsx`, so the Navbar and any cached routes don't show stale guest-session state). A merge/fetch failure doesn't block login — it's caught server-side and the client leaves the local cart untouched, to retry on the next login.
+- [x] Handle merge conflicts (sum quantities on same `product_id` + `bundle_id`) — not a plain `.upsert()`: `cart_items` has two _partial_ unique indexes (one for `bundle_id IS NULL`, one for `bundle_id IS NOT NULL` — see db-schema.md § 4), which a single `ON CONFLICT (user_id, product_id, bundle_id)` target can't match. Added RPC `merge_cart_items(p_items jsonb)` (`supabase/migrations/007_merge_cart_items.sql`) that picks the correct conflict target per row and sums `quantity` on conflict — `signIn` no longer calls `redirect()` itself (unlike the other auth actions) since the client needs the merged cart back first; it returns `{ ok, cartItems, redirectTo }` and the form does `window.location.href = redirectTo` (a full reload, same reasoning as `signOut` in `user-menu.tsx`, so the Navbar and any cached routes don't show stale guest-session state). A merge/fetch failure doesn't block login — it's caught server-side and the client leaves the local cart untouched, to retry on the next login.
 
 **✅ Phase 5 Complete when:** guests can add/edit cart in localStorage, and cart merges to DB on login.
 
@@ -537,11 +537,11 @@ Two bugs surfaced after Phase 5 was already checked off — neither was covered 
 
 Three bugs surfaced while testing checkout end-to-end — none caught by the original checklist above:
 
-- [x] **`place_order()` failed on every call with a foreign key violation** — `003_functions.sql`'s "Step 1" comment read "Create the order shell" but only ran `v_order_id := gen_random_uuid()`; the actual `insert into orders` didn't happen until "Step 4", four steps *after* `order_items` rows referencing that `order_id` were already being inserted in "Step 2". Every checkout attempt failed with `insert or update on table "order_items" violates foreign key constraint "order_items_order_id_fkey"`. This was a pre-existing bug from Phase 2/3, invisible until an actual order was placed. Fix: `005_fix_place_order_insert_order.sql` (`create or replace function`) — the `orders` row is now inserted immediately after generating `v_order_id`, with zeroed totals as a genuine placeholder (the "shell" the original comment described); the final step `UPDATE`s that same row with the real computed totals instead of a second `INSERT`.
+- [x] **`place_order()` failed on every call with a foreign key violation** — `003_functions.sql`'s "Step 1" comment read "Create the order shell" but only ran `v_order_id := gen_random_uuid()`; the actual `insert into orders` didn't happen until "Step 4", four steps _after_ `order_items` rows referencing that `order_id` were already being inserted in "Step 2". Every checkout attempt failed with `insert or update on table "order_items" violates foreign key constraint "order_items_order_id_fkey"`. This was a pre-existing bug from Phase 2/3, invisible until an actual order was placed. Fix: `005_fix_place_order_insert_order.sql` (`create or replace function`) — the `orders` row is now inserted immediately after generating `v_order_id`, with zeroed totals as a genuine placeholder (the "shell" the original comment described); the final step `UPDATE`s that same row with the real computed totals instead of a second `INSERT`.
 - [x] **Checkout/account pages rendered with no Navbar or Footer** — `app/(shop)/layout.tsx` (the only place `<Navbar />`/`<Footer />` were rendered) doesn't apply to routes under the separate `(account)` route group; Next.js route groups don't inherit each other's layouts regardless of how similar the pages should look. Every page built in this phase (`/checkout`, `/checkout/success`, `/account`, `/account/orders`, `/account/orders/[id]`) rendered bare inside the root layout. Fix: added `app/(account)/layout.tsx`, identical in content to `(shop)/layout.tsx` — both groups share the same page chrome, they're just split for routing organization.
 - [x] **Post-order success redirect sometimes lost a race and landed the user back on `/cart`** — `checkout-form.tsx`'s empty-cart-redirect guard originally depended on `items.length` and re-ran on every change to it, not just once on page load. `onSubmit`'s `useCartStore.getState().clearCart()` (which sets `items` to `[]`) re-triggered that effect immediately before `router.push("/checkout/success?...")`, and `router.replace("/cart")` sometimes won the race. Fix: the effect now depends on `hasHydrated` only (see § 5.4's third fix) — it checks once, when the persisted cart finishes hydrating, rather than continuously.
 
-**✅ Phase 8 Complete when:** customers can complete checkout, see confirmation, and review order history. *(Met, with the three narrower-than-checklist items noted above under 8.3/8.5/8.6.)*
+**✅ Phase 8 Complete when:** customers can complete checkout, see confirmation, and review order history. _(Met, with the three narrower-than-checklist items noted above under 8.3/8.5/8.6.)_
 
 ---
 
@@ -551,45 +551,45 @@ Three bugs surfaced while testing checkout end-to-end — none caught by the ori
 
 ### 9.1 Admin Layout
 
-- [ ] Build `(admin)/layout.tsx` with sidebar navigation
-- [ ] Sidebar links: Dashboard, Products, Orders, Reviews
-- [ ] Confirm proxy redirects non-admins to `/`
+- [x] Build `(admin)/layout.tsx` with sidebar navigation
+- [x] Sidebar links: Dashboard, Products, Orders, Reviews
+- [x] Confirm proxy redirects non-admins to `/`
 
 ### 9.2 Dashboard Overview
 
-- [ ] Build `/admin` page
-- [ ] KPI card: total orders (all-time)
-- [ ] KPI card: total orders this month
-- [ ] KPI card: total revenue (EGP)
-- [ ] KPI card: registered customers count
-- [ ] KPI card: active products count
+- [x] Build `/admin` page
+- [x] KPI card: total orders (all-time)
+- [x] KPI card: total orders this month
+- [x] KPI card: total revenue (EGP)
+- [x] KPI card: registered customers count
+- [x] KPI card: active products count
 
 ### 9.3 Products Management
 
-- [ ] Build `/admin/products` list page (table: name, category, price, status)
-- [ ] Add search/filter to product list
-- [ ] "Create Product" button → `/admin/products/new`
-- [ ] Build create/edit form (shared component)
-- [ ] Image upload to Supabase Storage (primary + gallery multi-upload)
-- [ ] Delete confirmation dialog
-- [ ] Toggle active/inactive switch
-- [ ] Make the toggle optimistic with `useOptimistic(isActive)` + `useTransition` — the switch flips on the current frame on click, then reverts if the update action fails, instead of waiting on a round trip for a simple boolean flip
+- [x] Build `/admin/products` list page (table: name, category, price, status)
+- [x] Add search/filter to product list
+- [x] "Create Product" button → `/admin/products/new`
+- [x] Build create/edit form (shared component)
+- [x] Image upload to Supabase Storage (primary + gallery multi-upload)
+- [x] Delete confirmation dialog
+- [x] Toggle active/inactive switch
+- [x] Make the toggle optimistic with `useOptimistic(isActive)` + `useTransition` — the switch flips on the current frame on click, then reverts if the update action fails, instead of waiting on a round trip for a simple boolean flip
 
 ### 9.4 Orders Management
 
-- [ ] Build `/admin/orders` list page (filter by status)
-- [ ] Show order ID, customer, total, status, date
-- [ ] Build `/admin/orders/[id]` detail page
-- [ ] Status update dropdown (with allowed transitions)
-- [ ] Make the status change optimistic with `useOptimistic(status)` + `useTransition` — the badge shows the new status the moment it's picked, and reverts to the previous one only if the server rejects the transition
-- [ ] Show customer info + shipping address
+- [x] Build `/admin/orders` list page (filter by status)
+- [x] Show order ID, customer, total, status, date
+- [x] Build `/admin/orders/[id]` detail page
+- [x] Status update dropdown (with allowed transitions)
+- [x] Make the status change optimistic with `useOptimistic(status)` + `useTransition` — the badge shows the new status the moment it's picked, and reverts to the previous one only if the server rejects the transition
+- [x] Show customer info + shipping address
 
 ### 9.5 Reviews Moderation
 
-- [ ] Build `/admin/reviews` page
-- [ ] List all reviews with product name, reviewer, rating, comment
-- [ ] Delete review button (with confirmation)
-- [ ] Once confirmed, make the removal optimistic — `useOptimistic(reviews, (state, id) => state.filter((r) => r.id !== id))` + `useTransition` — the row disappears immediately instead of waiting on `useDeleteReview()`'s round trip, and reappears with an error toast if the call fails
+- [x] Build `/admin/reviews` page
+- [x] List all reviews with product name, reviewer, rating, comment
+- [x] Delete review button (with confirmation)
+- [x] Once confirmed, make the removal optimistic — `useOptimistic(reviews, (state, id) => state.filter((r) => r.id !== id))` + `useTransition` — the row disappears immediately instead of waiting on `useDeleteReview()`'s round trip, and reappears with an error toast if the call fails
 
 **✅ Phase 9 Complete when:** admin can manage products, update order statuses, and moderate reviews.
 
@@ -599,27 +599,27 @@ Three bugs surfaced while testing checkout end-to-end — none caught by the ori
 
 ### 10.1 Error Handling
 
-- [ ] Global `error.tsx` boundary
-- [ ] Global `not-found.tsx` (404 page)
-- [ ] Per-route error boundaries where needed
-- [ ] User-friendly error messages (no raw stack traces)
+- [x] Global `error.tsx` boundary — `app/error.tsx` for route segment errors + `app/global-error.tsx` for root layout failures (with standalone document tags & dark theme)
+- [x] Global `not-found.tsx` (404 page) — `app/not-found.tsx` using `components/layout/error-state.tsx` with links to browse products, desk builder, and go home
+- [x] Per-route error boundaries where needed — `app/(shop)/error.tsx`, `app/(shop)/products/[slug]/error.tsx`, `app/(shop)/desk-builder/error.tsx`, `app/(shop)/cart/error.tsx`, `app/(account)/error.tsx`, `app/(admin)/error.tsx`, and `app/(auth)/error.tsx`
+- [x] User-friendly error messages (no raw stack traces) — clean user copy, error recovery actions (`retry()`), and subtle error digest tags for debugging without raw stack traces
 
 ### 10.2 Loading States
 
-- [ ] `loading.tsx` for slower pages (Product Listing, Orders)
-- [ ] Make those `loading.tsx` fallbacks offline-aware with `useOffline()` (see § 0.8) — swap the generic spinner for "Waiting for connection to load this page…" when connectivity is down, instead of a spinner that looks stuck
-- [ ] Skeleton components for all major lists
+- [x] `loading.tsx` for slower pages (Product Listing, Orders) — `app/(shop)/products/loading.tsx`, `app/(shop)/products/[slug]/loading.tsx`, `app/(shop)/desk-builder/loading.tsx`, `app/(shop)/cart/loading.tsx`, `app/(account)/account/loading.tsx`, `app/(account)/account/orders/loading.tsx`, `app/(account)/account/orders/[id]/loading.tsx`, `app/(admin)/admin/loading.tsx`, `app/(admin)/admin/products/loading.tsx`, `app/(admin)/admin/orders/loading.tsx`, `app/(admin)/admin/reviews/loading.tsx`, and `app/(auth)/loading.tsx`
+- [x] Make those `loading.tsx` fallbacks offline-aware with `useOffline()` (see § 0.8) — `OfflineAwareLoading` client wrapper (`components/layout/offline-loading.tsx`) checks `useOffline()` and swaps the loading skeletons for an informative "Waiting for connection to load this page…" card when disconnected
+- [x] Skeleton components for all major lists — `ProductsPageSkeleton`, `ProductDetailSkeleton`, `DeskBuilderSkeleton`, `CartViewSkeleton`, `OrdersListSkeleton`, `OrderDetailSkeleton`, `ProfileSkeleton`, `AdminDashboardSkeleton`, `AdminTableSkeleton`, `AdminReviewsSkeleton`
 
 ### 10.3 Notifications
 
-- [ ] Verify Sonner toasts fire for: add to cart, order placed, review submitted, profile updated
-- [ ] Error toasts for: form errors, network failures
+- [x] Verify Sonner toasts fire for: add to cart, order placed, review submitted, profile updated — `add-to-cart-button.tsx`, `confirm-build-modal.tsx`, `checkout-form.tsx`, `review-submission-panel.tsx`, `own-review-panel.tsx`, and `profile-form.tsx`
+- [x] Error toasts for: form errors, network failures — authentication forms (`login-form.tsx`, `register-form.tsx`, `forgot-password-form.tsx`, `reset-password-form.tsx`), and global network transitions / query sync failures in `QueryProvider`
 
 ### 10.4 SEO
 
-- [ ] Add root `metadata` in `layout.tsx` (title template, description, OG image) — title template + description already set alongside the brand work; only the OG image is left
-- [x] Brand assets: `components/layout/logo.tsx` (mark + wordmark lockup), `app/icon.svg`, `app/favicon.ico` (16/32/48), `app/apple-icon.png` (180) — geometry source of truth is `icon.svg`/`logo.tsx`
-- [ ] Per-page metadata for Products list + individual products (dynamic OG)
+- [x] Add root `metadata` in `layout.tsx` (title template, description, OG image) — title template + description already set alongside the brand work; only the OG image is left
+- [x] Brand assets: `components/layout/logo.tsx` (mark + wordmark lockup), `app/icon.svg`, `app/favicon.ico` (16/32/48), `app/apple-icon.png` (180) — geometry source of truth is `icon.svg`/`logo.tsx` (developer monitor setup with Ember illumination and prompt mark)
+- [x] Per-page metadata for Products list + individual products (dynamic OG)
 - [ ] Generate `sitemap.xml`
 - [ ] Generate `robots.txt`
 
