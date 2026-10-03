@@ -28,7 +28,7 @@ export function useUpdateReview() {
       return updateReview(supabase, userData.user.id, input);
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         queryKey: reviewsQueryKey(variables.productId),
       });
     },

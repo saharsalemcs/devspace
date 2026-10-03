@@ -18,7 +18,7 @@ export function useDeleteReview() {
     mutationFn: (input: DeleteReviewInput) =>
       deleteReview(createClient(), input),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         queryKey: reviewsQueryKey(variables.productId),
       });
     },
