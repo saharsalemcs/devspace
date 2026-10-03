@@ -29,9 +29,12 @@ export function useSubmitReview() {
       return submitReview(supabase, userData.user.id, input);
     },
     onSuccess: (_data, variables) => {
-      return queryClient.invalidateQueries({
-        queryKey: reviewsQueryKey(variables.productId),
-      });
+      return Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: reviewsQueryKey(variables.productId),
+        }),
+        queryClient.invalidateQueries({ queryKey: ["product"] }),
+      ]);
     },
   });
 }

@@ -1,6 +1,5 @@
 import { Database, Tables } from "@/types/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { REVIEW_DUPLICATE_ERROR_CODE } from "../query-config";
 
 export type Review = Tables<"reviews"> & {
   profiles: Pick<Tables<"profiles">, "full_name"> | null;
@@ -35,6 +34,8 @@ export type SubmitReviewInput = {
   rating: number;
   comment: string | null;
 };
+
+export const REVIEW_DUPLICATE_ERROR_CODE = "23505";
 
 export class DuplicateReviewError extends Error {
   constructor() {
@@ -109,7 +110,7 @@ export async function updateReview(
 
 export type DeleteOwnReviewInput = {
   reviewId: string;
-  productId: string;
+  productId: string; // needed to invalidate the right query key
 };
 
 export async function deleteOwnReview(
