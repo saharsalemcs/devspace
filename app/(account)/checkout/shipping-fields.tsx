@@ -87,7 +87,7 @@ function ShippingFields({ register, control, errors }: ShippingFieldsProps) {
         </FormField>
       </div>
 
-      <FormField
+      {/* <FormField
         label="Postal Code (optional)"
         htmlFor="shipping.postal_code"
         error={errors.shipping?.postal_code}
@@ -96,7 +96,7 @@ function ShippingFields({ register, control, errors }: ShippingFieldsProps) {
           id="shipping.postal_code"
           {...register("shipping.postal_code")}
         />
-      </FormField>
+      </FormField> */}
 
       <FormField
         label="Delivery Notes (optional)"

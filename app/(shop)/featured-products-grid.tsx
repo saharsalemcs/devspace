@@ -50,7 +50,7 @@ function FeaturedProductsGrid() {
   return (
     <div
       data-slot="featured-products-grid"
-      className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"
+      className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-4"
     >
       {data.map((product) => (
         <ProductCard
