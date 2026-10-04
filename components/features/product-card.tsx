@@ -63,18 +63,17 @@ function ProductCard({
       .catch(() => {});
   }
 
-  return (
+  const cardContent = (
     <div
       data-slot="product-card"
       data-selected={selected || undefined}
       data-out-of-stock={outOfStock || undefined}
-      onClick={onSelect}
       className={cn(
         "group/product-card bg-surface relative flex flex-col gap-3 rounded-xl border p-4 transition-all duration-200 ease-out",
         selected
           ? "border-ember-500 ring-ember-500/30 border-2 ring-1"
           : "hover:bg-surface-elevated border-neutral-700 hover:-translate-y-0.5 hover:border-neutral-600 hover:shadow-lg active:translate-y-0 active:shadow-md",
-        onSelect && "cursor-pointer",
+        (onSelect || !onSelect) && "cursor-pointer",
         className,
       )}
     >
@@ -102,15 +101,10 @@ function ProductCard({
 
       <div className={cn("flex flex-col gap-1", outOfStock && "opacity-40")}>
         <p className="text-caption text-neutral-400 uppercase">{category}</p>
-        <Link
-          href={`/products/${slug}`}
-          onClick={(e) => e.stopPropagation()}
-          onMouseEnter={prefetchProduct}
-          onFocus={prefetchProduct}
-          className="text-foreground hover:text-primary text-xl"
-        >
+
+        <span className="text-foreground group-hover/product-card:text-primary truncate text-xl transition-colors">
           {name}
-        </Link>
+        </span>
 
         {reviewCount ? (
           <div className="flex items-center gap-1.5">
@@ -125,17 +119,43 @@ function ProductCard({
       </div>
 
       {!hideAddToCart && (
-        <AddToCartButton
-          // disabled={outOfStock}
-          productName={name}
-          productId={productId}
-          slug={slug}
-          price={price}
-          imageUrl={imageUrl}
-          className={cn("mt-auto w-full sm:w-auto", outOfStock && "opacity-40")}
-        />
+        <div
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+          className="mt-auto"
+        >
+          <AddToCartButton
+            productName={name}
+            productId={productId}
+            slug={slug}
+            price={price}
+            imageUrl={imageUrl}
+            className={cn("w-full", outOfStock && "opacity-40")}
+          />
+        </div>
       )}
     </div>
+  );
+
+  if (onSelect) {
+    return (
+      <div onClick={onSelect} className="contents">
+        {cardContent}
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={`/products/${slug}`}
+      onMouseEnter={prefetchProduct}
+      onFocus={prefetchProduct}
+      className="block no-underline"
+    >
+      {cardContent}
+    </Link>
   );
 }
 
