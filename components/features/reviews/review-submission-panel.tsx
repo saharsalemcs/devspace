@@ -64,6 +64,7 @@ function ReviewSubmissionPanel({
       comment: data.comment,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+      author_name: userFullName,
       profiles: { full_name: userFullName },
       pending: true,
     };
