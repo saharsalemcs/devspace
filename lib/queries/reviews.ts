@@ -1,9 +1,17 @@
 import { Database, Tables } from "@/types/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { REVIEW_DUPLICATE_ERROR_CODE } from "../query-config";
 
 export type Review = Tables<"reviews"> & {
   profiles: Pick<Tables<"profiles">, "full_name"> | null;
 };
+
+function toReview(row: Tables<"reviews">): Review {
+  return {
+    ...row,
+    profiles: row.author_name ? { full_name: row.author_name } : null,
+  };
+}
 
 export function reviewsQueryKey(productId: string) {
   return ["reviews", productId] as const;
@@ -15,18 +23,13 @@ export async function fetchReviews(
 ): Promise<Review[]> {
   const { data, error } = await supabase
     .from("reviews")
-    .select("*, profiles(full_name)")
+    .select("*")
     .eq("product_id", productId)
     .order("created_at", { ascending: false });
 
   if (error) throw error;
 
-  return (data ?? []).map((row) => ({
-    ...row,
-    profiles: Array.isArray(row.profiles)
-      ? (row.profiles[0] ?? null)
-      : row.profiles,
-  }));
+  return (data ?? []).map(toReview);
 }
 
 export type SubmitReviewInput = {
@@ -34,8 +37,6 @@ export type SubmitReviewInput = {
   rating: number;
   comment: string | null;
 };
-
-export const REVIEW_DUPLICATE_ERROR_CODE = "23505";
 
 export class DuplicateReviewError extends Error {
   constructor() {
@@ -57,7 +58,7 @@ export async function submitReview(
       rating: input.rating,
       comment: input.comment,
     })
-    .select("*, profiles(full_name)")
+    .select("*")
     .single();
 
   if (error) {
@@ -67,12 +68,7 @@ export async function submitReview(
     throw error;
   }
 
-  return {
-    ...data,
-    profiles: Array.isArray(data.profiles)
-      ? (data.profiles[0] ?? null)
-      : data.profiles,
-  };
+  return toReview(data);
 }
 
 export type UpdateReviewInput = {
@@ -95,22 +91,17 @@ export async function updateReview(
     })
     .eq("id", input.reviewId)
     .eq("user_id", userId)
-    .select("*, profiles(full_name)")
+    .select("*")
     .single();
 
   if (error) throw error;
 
-  return {
-    ...data,
-    profiles: Array.isArray(data.profiles)
-      ? (data.profiles[0] ?? null)
-      : data.profiles,
-  };
+  return toReview(data);
 }
 
 export type DeleteOwnReviewInput = {
   reviewId: string;
-  productId: string; // needed to invalidate the right query key
+  productId: string;
 };
 
 export async function deleteOwnReview(
