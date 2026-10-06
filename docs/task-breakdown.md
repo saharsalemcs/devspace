@@ -633,19 +633,19 @@ Three bugs surfaced while testing checkout end-to-end — none caught by the ori
 
 ### 10.6 Performance
 
-- [ ] Use Next.js `Image` for all product images (with `sizes` prop)
-- [ ] Verify no client bundle bloat (bundle analyzer if in doubt)
-- [ ] Verify React Query stale/cache times are sensible
+- [x] Use Next.js `Image` for all product images (with `sizes` prop)
+- [x] Verify no client bundle bloat (bundle analyzer if in doubt)
+- [x] Verify React Query stale/cache times are sensible
 
 ### 10.7 Deployment
 
-- [ ] Create Vercel project, link GitHub repo
-- [ ] Add environment variables to Vercel (all three keys)
-- [ ] Test preview deployment on a PR
+- [x] Create Vercel project, link GitHub repo
+- [x] Add environment variables to Vercel (all three keys)
+- [x] Test preview deployment on a PR
 - [ ] Configure custom domain (optional)
 - [ ] Promote to production
 - [ ] Re-enable email confirmation in Supabase for production
-- [ ] Smoke-test all critical flows on production (register → browse → build → order)
+- [x] Smoke-test all critical flows on production (register → browse → build → order)
 
 ### 10.8 Post-Launch
 
